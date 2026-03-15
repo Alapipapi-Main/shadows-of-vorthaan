@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --gold: #c9a84c;
+  --gold-light: #f0d060;
+  --gold-dark: #8a6a1a;
+  --blood: #8b0000;
+  --blood-light: #cc2222;
+  --bg-deepest: #050408;
+  --bg-deep: #0a0910;
+  --bg-mid: #110e1a;
+  --bg-card: #1a1526;
+  --text-bright: #f5efe0;
+  --text-muted: #8a7f6e;
+  --border: rgba(201,168,76,0.25);
+  --glow: rgba(201,168,76,0.15);
+  --hp-green: #2ecc71;
+  --hp-yellow: #f1c40f;
+  --hp-red: #e74c3c;
+  --xp-blue: #3498db;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--bg-deepest);
+  color: var(--text-bright);
+  font-family: 'Crimson Text', Georgia, serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root { min-height: 100vh; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deepest); }
+::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
+
+button { cursor: pointer; }

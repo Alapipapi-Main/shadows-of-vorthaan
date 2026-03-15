@@ -1,0 +1,181 @@
+.wrap {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.locationHeader {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-mid) 100%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.locationHeader::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.locationIcon { font-size: 3rem; filter: drop-shadow(0 0 12px rgba(201,168,76,0.4)); }
+
+.locationName {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.4rem;
+  color: var(--gold-light);
+  margin-bottom: 8px;
+  text-shadow: 0 0 20px rgba(201,168,76,0.3);
+}
+
+.locationDesc {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 700px) {
+  .main { grid-template-columns: 1fr; }
+}
+
+.sectionTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.actions { display: flex; flex-direction: column; gap: 8px; }
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  color: var(--text-bright);
+  text-align: left;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.actionBtn span { font-size: 1.4rem; }
+
+.actionBtn:hover {
+  transform: translateX(4px);
+  border-color: var(--border);
+  background: rgba(255,255,255,0.06);
+}
+
+.btnTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.82rem;
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+.btnSub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+.fightBtn:hover { border-color: var(--blood-light); background: rgba(139,0,0,0.15); }
+.bossBtn { border-color: rgba(255,215,0,0.3); background: rgba(255,215,0,0.05); }
+.bossBtn:hover { border-color: var(--gold); background: rgba(201,168,76,0.12); }
+.shopBtn:hover { border-color: #2ecc71; background: rgba(46,204,113,0.1); }
+.restBtn:hover { border-color: #3498db; background: rgba(52,152,219,0.1); }
+.travelBtn:hover { border-color: var(--gold-dark); }
+
+.divider {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 4px 0;
+}
+
+.logPanel { display: flex; flex-direction: column; gap: 12px; }
+
+.log {
+  background: var(--bg-deepest);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.logEmpty { color: var(--text-muted); font-style: italic; font-size: 0.85rem; }
+
+.logEntry {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  line-height: 1.5;
+}
+
+.logEntry.danger { color: #e07070; }
+.logEntry.player { color: #a0d8a0; }
+.logEntry.victory { color: var(--gold); }
+.logEntry.heal { color: #70d0e0; }
+.logEntry.travel { color: #a0a0e0; }
+.logEntry.levelup { color: var(--gold-light); font-weight: bold; }
+.logEntry.shop { color: #90e090; }
+.logEntry.crit { color: #ffcc44; font-weight: bold; }
+.logEntry.buff { color: #cc88ff; }
+
+.playerStats {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.statsTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.statsGrid { display: flex; flex-direction: column; gap: 6px; }
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.stat span:first-child { color: var(--text-muted); }
+.stat span:last-child { color: var(--text-bright); font-weight: 600; }

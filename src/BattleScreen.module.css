@@ -1,0 +1,229 @@
+.wrap {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bossAlert {
+  background: linear-gradient(135deg, rgba(139,0,0,0.3), rgba(201,168,76,0.1));
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 12px 20px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  color: var(--gold-light);
+  letter-spacing: 0.1em;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.arena {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 20px;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-mid));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.arena::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(139,0,0,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.combatant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 220px;
+}
+
+.sprite {
+  font-size: 4rem;
+  filter: drop-shadow(0 0 20px rgba(201,168,76,0.3));
+  transition: transform 0.3s;
+  line-height: 1;
+}
+
+.attacking {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px) scale(1.05); }
+  75% { transform: translateX(8px) scale(1.05); }
+}
+
+.combatantName {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  color: var(--text-bright);
+  font-weight: 700;
+}
+
+.combatantLevel {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.hpBar {
+  width: 100%;
+  height: 10px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.hpFill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.5s ease, background 0.5s;
+}
+
+.hpText {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.statsRow {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.vsText {
+  font-size: 2rem;
+  color: var(--gold-dark);
+  flex-shrink: 0;
+}
+
+.battleLog {
+  background: var(--bg-deepest);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.logEntry {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 2px 0;
+  line-height: 1.5;
+}
+
+.logEntry.danger { color: #e07070; }
+.logEntry.player { color: #a0d8a0; }
+.logEntry.victory { color: var(--gold); }
+.logEntry.heal { color: #70d0e0; }
+.logEntry.crit { color: #ffcc44; font-weight: bold; }
+.logEntry.buff { color: #cc88ff; }
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.turnIndicator {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  color: var(--gold);
+  text-align: center;
+  letter-spacing: 0.1em;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.btn {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.attackBtn {
+  background: linear-gradient(135deg, rgba(139,0,0,0.3), rgba(204,34,34,0.1));
+  border-color: var(--blood-light);
+  color: #ffaaaa;
+}
+
+.attackBtn:not(:disabled):hover {
+  background: linear-gradient(135deg, rgba(139,0,0,0.5), rgba(204,34,34,0.2));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(139,0,0,0.4);
+}
+
+.defendBtn {
+  background: linear-gradient(135deg, rgba(52,152,219,0.2), rgba(52,152,219,0.05));
+  border-color: #3498db;
+  color: #aaddff;
+}
+
+.defendBtn:not(:disabled):hover {
+  background: linear-gradient(135deg, rgba(52,152,219,0.35), rgba(52,152,219,0.15));
+  transform: translateY(-2px);
+}
+
+.itemBtn {
+  background: linear-gradient(135deg, rgba(46,204,113,0.2), rgba(46,204,113,0.05));
+  border-color: #2ecc71;
+  color: #aaffcc;
+}
+
+.itemBtn:not(:disabled):hover {
+  background: linear-gradient(135deg, rgba(46,204,113,0.35), rgba(46,204,113,0.15));
+  transform: translateY(-2px);
+}
+
+.fleeBtn {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text-muted);
+}
+
+.fleeBtn:not(:disabled):hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-2px);
+}
