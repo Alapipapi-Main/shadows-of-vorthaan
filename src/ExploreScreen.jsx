@@ -5,20 +5,15 @@ import styles from './ExploreScreen.module.css';
 export default function ExploreScreen({ player, onTravel, onStartBattle, onShop, onRest, log }) {
   const location = LOCATIONS[player.location];
   const [searching, setSearching] = useState(false);
-  const [foundLoot, setFoundLoot] = useState(null);
 
   const handleSearch = () => {
     setSearching(true);
     setTimeout(() => {
       setSearching(false);
-      const roll = Math.random();
-      if (location.enemies.length > 0 && roll < 0.45) {
-        const enemyId = location.enemies[Math.floor(Math.random() * location.enemies.length)];
-        onStartBattle(enemyId);
-      } else {
-        setFoundLoot(location.loot.length > 0 && roll > 0.7 ? location.loot[0] : null);
-      }
-    }, 800);
+      // Always trigger a battle — that's what the button promises
+      const enemyId = location.enemies[Math.floor(Math.random() * location.enemies.length)];
+      onStartBattle(enemyId);
+    }, 600);
   };
 
   const canRest = player.location === 'village' || player.location === 'tavern';
