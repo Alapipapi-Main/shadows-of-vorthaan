@@ -117,11 +117,21 @@
   transition: all 0.2s;
 }
 
-.questHudBtn:hover {
-  background: rgba(201,168,76,0.2);
-  border-color: var(--gold);
-  color: var(--gold-light);
+.audioBtn {
+  background: rgba(201,168,76,0.08);
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+.audioBtn:hover { background: rgba(201,168,76,0.2); border-color: var(--gold); }
 
 .hudBadge {
   position: absolute;

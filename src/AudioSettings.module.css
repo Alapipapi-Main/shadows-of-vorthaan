@@ -1,0 +1,118 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 250;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, var(--bg-mid), var(--bg-card));
+}
+
+.title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.95rem;
+  color: var(--gold-light);
+}
+
+.closeBtn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+.closeBtn:hover { background: rgba(255,255,255,0.1); color: var(--text-bright); }
+
+.body {
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  color: var(--text-bright);
+  min-width: 90px;
+}
+
+.sliderWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.1);
+  outline: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(201,168,76,0.5);
+  transition: transform 0.15s;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.val {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  color: var(--gold);
+  min-width: 36px;
+  text-align: right;
+}
+
+.hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-style: italic;
+  text-align: center;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}

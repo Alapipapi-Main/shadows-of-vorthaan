@@ -327,24 +327,54 @@
 .statRow span:first-child { color: var(--text-muted); font-family: 'Cinzel', serif; font-size: 0.75rem; }
 .statRow span:last-child { color: var(--text-bright); font-weight: 600; }
 
-.restartBtn, .playAgainBtn {
-  background: linear-gradient(135deg, rgba(204,68,68,0.25), rgba(204,68,68,0.05));
-  border: 1px solid #cc4444;
-  color: #ffaaaa;
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 0.95rem;
-  padding: 14px 40px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
+/* ── Death / Victory action buttons ── */
+.deathActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.retryBtn, .loadOtherBtn, .titleBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
   width: 100%;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: 1px solid;
 }
 
-.playAgainBtn {
-  background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.05));
-  border-color: var(--gold);
-  color: var(--gold-light);
+.btnSub {
+  font-size: 0.65rem;
+  font-weight: 400;
+  opacity: 0.7;
+  font-family: 'Crimson Text', serif;
 }
 
-.restartBtn:hover { background: rgba(204,68,68,0.3); transform: translateY(-2px); }
-.playAgainBtn:hover { background: rgba(201,168,76,0.3); transform: translateY(-2px); }
+.retryBtn {
+  background: linear-gradient(135deg, rgba(204,68,68,0.25), rgba(204,68,68,0.05));
+  border-color: #cc4444;
+  color: #ffaaaa;
+}
+.retryBtn:hover { background: rgba(204,68,68,0.35); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(204,68,68,0.3); }
+
+.loadOtherBtn {
+  background: rgba(52,152,219,0.1);
+  border-color: rgba(52,152,219,0.4);
+  color: #aaddff;
+}
+.loadOtherBtn:hover { background: rgba(52,152,219,0.2); transform: translateY(-2px); }
+
+.titleBtn {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text-muted);
+}
+.titleBtn:hover { background: rgba(255,255,255,0.07); color: var(--text-bright); }
