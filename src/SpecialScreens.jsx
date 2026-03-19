@@ -51,10 +51,10 @@ export function TitleScreen({ onNewGame, onContinue, hasAnySave }) {
         {hasAnySave && (
           <p className={styles.saveNote}>💾 {hasAnySave} save slot{hasAnySave > 1 ? 's' : ''} found</p>
         )}
+      </div>
 
-        <p className={`${styles.audioHint} ${audioStarted ? styles.audioHintHidden : ''}`}>
-          🔊 Click anywhere to start music
-        </p>
+      <div className={`${styles.audioHint} ${audioStarted ? styles.audioHintHidden : ''}`}>
+        🔊 Click anywhere to start music
       </div>
     </div>
   );
