@@ -17,7 +17,7 @@ export default function App() {
     player, screen, setScreen, battleState, log, notification, quests, activeSlot,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
     resolveVictory, useItem, buyItem, rest, claimQuest, addLog,
-    loadSlot, eraseSlot, goToTitle,
+    loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
   } = useGameState();
 
   const { musicVol, sfxVol, setMusicVol, setSfxVol, playMusic, playSfx } = useAudio();
@@ -119,9 +119,10 @@ export default function App() {
     <VictoryScreen
       player={player}
       activeSlot={activeSlot}
+      onNewGame={() => { clearVictoryAndGoTitle(); setTimeout(() => setSlotPicker('new'), 50); }}
       onLoadSlot={(slot) => { loadSlot(slot); }}
       onEraseSlot={eraseSlot}
-      onGoTitle={goToTitle}
+      onClearVictory={clearVictoryAndGoTitle}
     />
   );
 

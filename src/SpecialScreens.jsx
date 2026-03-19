@@ -110,15 +110,20 @@ export function GameOverScreen({ player, activeSlot, onLoadSlot, onEraseSlot, on
 }
 
 // ── Victory ───────────────────────────────────────────────────────────────────
-export function VictoryScreen({ player, activeSlot, onLoadSlot, onEraseSlot, onGoTitle }) {
+export function VictoryScreen({ player, activeSlot, onNewGame, onLoadSlot, onEraseSlot, onClearVictory }) {
   const [showPicker, setShowPicker] = useState(false);
+
+  // All paths clear the winning save first
+  const handleNewGame = () => { onClearVictory(); };
+  const handleLoadOther = (slot) => { onEraseSlot(activeSlot); setShowPicker(false); onLoadSlot(slot); };
+  const handleTitle = () => { onClearVictory(); };
 
   return (
     <div className={styles.victoryWrap}>
       {showPicker && (
         <SaveSlotPicker
           mode="load"
-          onSelect={(slot) => { setShowPicker(false); onLoadSlot(slot); }}
+          onSelect={handleLoadOther}
           onErase={(slot) => { onEraseSlot(slot); }}
           onClose={() => setShowPicker(false)}
         />
@@ -136,22 +141,27 @@ export function VictoryScreen({ player, activeSlot, onLoadSlot, onEraseSlot, onG
           <div className={styles.statRow}><span>Enemies Slain</span><span>{player.totalKills}</span></div>
           <div className={styles.statRow}><span>Gold Collected</span><span>{player.gold}</span></div>
           <div className={styles.statRow}><span>Weapon</span><span>{player.weapon.name}</span></div>
-          <div className={styles.statRow}><span>Save Slot</span><span>Slot {activeSlot}</span></div>
+          <div className={styles.statRow}><span>Save Slot</span><span>Slot {activeSlot} — cleared ✓</span></div>
         </div>
 
+        <p className={styles.victoryNote}>💾 Your save has been cleared — the legend is complete.</p>
+
         <div className={styles.deathActions}>
-          <button className={styles.retryBtn} onClick={() => onLoadSlot(activeSlot)}
-            style={{ background: 'linear-gradient(135deg,rgba(201,168,76,0.25),rgba(201,168,76,0.05))', borderColor: 'var(--gold)', color: 'var(--gold-light)' }}>
-            🔄 Play Again (Same Slot)
-            <span className={styles.btnSub}>Restart in Slot {activeSlot}</span>
+          <button
+            className={styles.retryBtn}
+            style={{ background: 'linear-gradient(135deg,rgba(201,168,76,0.25),rgba(201,168,76,0.05))', borderColor: 'var(--gold)', color: 'var(--gold-light)' }}
+            onClick={handleNewGame}
+          >
+            ⚔️ Start a New Adventure
+            <span className={styles.btnSub}>Pick a slot & begin again</span>
           </button>
 
           <button className={styles.loadOtherBtn} onClick={() => setShowPicker(true)}>
-            📂 Load a Save
-            <span className={styles.btnSub}>Choose another slot</span>
+            📂 Load Another Save
+            <span className={styles.btnSub}>Continue a different slot</span>
           </button>
 
-          <button className={styles.titleBtn} onClick={onGoTitle}>
+          <button className={styles.titleBtn} onClick={handleTitle}>
             🏠 Back to Title
           </button>
         </div>

@@ -76,7 +76,10 @@ export function useGameState() {
     const data = readSlot(slot);
     setActiveSlot(slot);
     if (data) {
-      setPlayer(data.player);
+      // Restore HP to max if player died (hp === 0) so retry feels fair
+      const p = data.player;
+      const restoredPlayer = p.hp <= 0 ? { ...p, hp: p.maxHp } : p;
+      setPlayer(restoredPlayer);
       setQuests(data.quests ?? JSON.parse(JSON.stringify(INITIAL_QUESTS)));
       setLog(data.log ?? []);
     } else {
@@ -90,7 +93,6 @@ export function useGameState() {
 
   const eraseSlot = useCallback((slot) => {
     deleteSlot(slot);
-    // If erasing the active slot, go back to title
     if (activeSlot === slot) {
       setActiveSlot(null);
       setPlayer(JSON.parse(JSON.stringify(INITIAL_PLAYER)));
@@ -99,6 +101,17 @@ export function useGameState() {
       setBattleState(null);
       setScreen('title');
     }
+  }, [activeSlot]);
+
+  // Called after beating the game — wipes the winning slot then goes to title
+  const clearVictoryAndGoTitle = useCallback(() => {
+    if (activeSlot) deleteSlot(activeSlot);
+    setActiveSlot(null);
+    setPlayer(JSON.parse(JSON.stringify(INITIAL_PLAYER)));
+    setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
+    setBattleState(null);
+    setLog([]);
+    setScreen('title');
   }, [activeSlot]);
 
   // ── Quest helpers ─────────────────────────────────────────────────────────
@@ -260,6 +273,6 @@ export function useGameState() {
     player, screen, setScreen, battleState, log, notification, quests, activeSlot,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
     resolveVictory, useItem, buyItem, rest, claimQuest, addLog, notify,
-    loadSlot, eraseSlot, goToTitle,
+    loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
   };
 }

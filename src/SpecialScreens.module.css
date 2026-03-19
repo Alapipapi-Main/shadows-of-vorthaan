@@ -304,6 +304,14 @@
 
 .victorySub { color: var(--text-muted); font-style: italic; margin-bottom: 28px; line-height: 1.7; }
 
+.victoryNote {
+  font-size: 0.72rem;
+  color: var(--gold-dark);
+  margin-bottom: 16px;
+  font-style: italic;
+  opacity: 0.8;
+}
+
 /* ===== SHARED ===== */
 .stats {
   background: var(--bg-card);
