@@ -1,51 +1,66 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ENEMIES, LOCATIONS, WEAPONS, ARMORS,
   INITIAL_PLAYER, INITIAL_QUESTS, QUESTS,
   getXpToNext, getLevelStats,
 } from './gameData';
 
-const SAVE_KEY = 'vorhaan_save_v1';
+const SLOT_COUNT = 3;
+const SLOT_KEY = (slot) => `vorhaan_save_v1_slot${slot}`;
 
-function loadSave() {
+// ── Slot helpers (exported for UI use) ───────────────────────────────────────
+export function readSlot(slot) {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    const raw = localStorage.getItem(SLOT_KEY(slot));
+    return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 
-function writeSave(data) {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch {}
+export function writeSlot(slot, data) {
+  try { localStorage.setItem(SLOT_KEY(slot), JSON.stringify(data)); } catch {}
 }
 
-export function hasSaveData() {
-  return !!localStorage.getItem(SAVE_KEY);
+export function deleteSlot(slot) {
+  localStorage.removeItem(SLOT_KEY(slot));
 }
 
-export function deleteSave() {
-  localStorage.removeItem(SAVE_KEY);
+export function getAllSlots() {
+  return Array.from({ length: SLOT_COUNT }, (_, i) => {
+    const data = readSlot(i + 1);
+    return {
+      slot: i + 1,
+      empty: !data,
+      player: data?.player ?? null,
+      savedAt: data?.savedAt ?? null,
+    };
+  });
 }
 
+// ── Hook ─────────────────────────────────────────────────────────────────────
 export function useGameState() {
-  const saved = loadSave();
-
-  const [player, setPlayer] = useState(() =>
-    saved?.player ?? JSON.parse(JSON.stringify(INITIAL_PLAYER))
-  );
-  const [screen, setScreen] = useState('title');
+  const [activeSlot, setActiveSlot] = useState(null); // null = no slot loaded yet
+  const [player, setPlayer]         = useState(() => JSON.parse(JSON.stringify(INITIAL_PLAYER)));
+  const [screen, setScreen]         = useState('title');
   const [battleState, setBattleState] = useState(null);
-  const [log, setLog] = useState(() => saved?.log ?? []);
+  const [log, setLog]               = useState([]);
   const [notification, setNotification] = useState(null);
-  const [quests, setQuests] = useState(() =>
-    saved?.quests ?? JSON.parse(JSON.stringify(INITIAL_QUESTS))
-  );
+  const [quests, setQuests]         = useState(() => JSON.parse(JSON.stringify(INITIAL_QUESTS)));
 
-  // Auto-save whenever player, quests, or screen changes (skip non-gameplay screens)
+  // Track latest values for auto-save without stale closure issues
+  const saveRef = useRef({ player, quests, log, screen, activeSlot });
+  useEffect(() => { saveRef.current = { player, quests, log, screen, activeSlot }; });
+
+  // Auto-save whenever gameplay state changes
   useEffect(() => {
+    if (!activeSlot) return;
     if (screen === 'title' || screen === 'gameover' || screen === 'victory') return;
-    writeSave({ player, quests, log: log.slice(-20) });
-  }, [player, quests, screen]);
+    writeSlot(activeSlot, {
+      player,
+      quests,
+      log: log.slice(-20),
+      savedAt: new Date().toISOString(),
+    });
+  }, [player, quests, screen, activeSlot]);
 
   const addLog = useCallback((msg, type = 'normal') => {
     setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
@@ -56,15 +71,45 @@ export function useGameState() {
     setTimeout(() => setNotification(null), 2500);
   }, []);
 
-  // ── Quest helpers ────────────────────────────────────────────────────────────
+  // ── Slot management ───────────────────────────────────────────────────────
+  const loadSlot = useCallback((slot) => {
+    const data = readSlot(slot);
+    setActiveSlot(slot);
+    if (data) {
+      setPlayer(data.player);
+      setQuests(data.quests ?? JSON.parse(JSON.stringify(INITIAL_QUESTS)));
+      setLog(data.log ?? []);
+    } else {
+      setPlayer(JSON.parse(JSON.stringify(INITIAL_PLAYER)));
+      setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
+      setLog([]);
+    }
+    setBattleState(null);
+    setScreen('explore');
+  }, []);
+
+  const eraseSlot = useCallback((slot) => {
+    deleteSlot(slot);
+    // If erasing the active slot, go back to title
+    if (activeSlot === slot) {
+      setActiveSlot(null);
+      setPlayer(JSON.parse(JSON.stringify(INITIAL_PLAYER)));
+      setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
+      setLog([]);
+      setBattleState(null);
+      setScreen('title');
+    }
+  }, [activeSlot]);
+
+  // ── Quest helpers ─────────────────────────────────────────────────────────
   const advanceQuests = useCallback((type, target) => {
     setQuests(prev => prev.map(q => {
       if (q.status !== 'active') return q;
       const def = QUESTS.find(d => d.id === q.id);
       if (!def) return q;
       let hit = false;
-      if (def.type === 'kill_any' && type === 'kill') hit = true;
-      if (def.type === 'kill_enemy' && type === 'kill' && def.target === target) hit = true;
+      if (def.type === 'kill_any'       && type === 'kill')  hit = true;
+      if (def.type === 'kill_enemy'     && type === 'kill'  && def.target === target) hit = true;
       if (def.type === 'visit_location' && type === 'visit' && def.target === target) hit = true;
       if (!hit) return q;
       const newProgress = q.progress + 1;
@@ -81,16 +126,12 @@ export function useGameState() {
     const def = QUESTS.find(d => d.id === questId);
     if (!def) return;
     setQuests(prev => prev.map(q => q.id === questId ? { ...q, status: 'claimed' } : q));
-    setPlayer(p => ({
-      ...p,
-      gold: p.gold + def.reward.gold,
-      xp: p.xp + def.reward.xp,
-    }));
+    setPlayer(p => ({ ...p, gold: p.gold + def.reward.gold, xp: p.xp + def.reward.xp }));
     addLog(`💰 Claimed reward: +${def.reward.gold} Gold, +${def.reward.xp} XP`, 'victory');
     notify(`Reward claimed! +${def.reward.gold}g +${def.reward.xp}xp`, 'success');
   }, [addLog, notify]);
 
-  // ── Navigation ───────────────────────────────────────────────────────────────
+  // ── Navigation ────────────────────────────────────────────────────────────
   const travel = useCallback((locationId) => {
     setPlayer(p => ({ ...p, location: locationId }));
     addLog(`You travel to ${LOCATIONS[locationId].name}.`, 'travel');
@@ -98,7 +139,7 @@ export function useGameState() {
     advanceQuests('visit', locationId);
   }, [addLog, advanceQuests]);
 
-  // ── Battle ───────────────────────────────────────────────────────────────────
+  // ── Battle ────────────────────────────────────────────────────────────────
   const startBattle = useCallback((enemyId) => {
     const enemy = JSON.parse(JSON.stringify(ENEMIES[enemyId]));
     setBattleState({ enemy, turn: 'player', buffs: { atk: 0 }, round: 1, lastDmg: null, lastHit: null });
@@ -112,20 +153,11 @@ export function useGameState() {
     const raw = Math.max(1, atk - battleState.enemy.def + Math.floor(Math.random() * 6) - 2);
     const isCrit = Math.random() < 0.15;
     const finalDmg = isCrit ? Math.floor(raw * 1.75) : raw;
-
     addLog(`${isCrit ? '💥 Critical! ' : ''}You deal ${finalDmg} damage to ${battleState.enemy.name}.`, isCrit ? 'crit' : 'player');
-
     setBattleState(prev => {
       const newHp = Math.max(0, prev.enemy.hp - finalDmg);
-      const next = {
-        ...prev,
-        enemy: { ...prev.enemy, hp: newHp },
-        lastDmg: { value: finalDmg, isCrit, target: 'enemy', id: Date.now() },
-        lastHit: { target: 'enemy', id: Date.now() },
-      };
-      return newHp <= 0
-        ? { ...next, turn: 'resolved' }
-        : { ...next, turn: 'enemy' };
+      const next = { ...prev, enemy: { ...prev.enemy, hp: newHp }, lastDmg: { value: finalDmg, isCrit, target: 'enemy', id: Date.now() } };
+      return newHp <= 0 ? { ...next, turn: 'resolved' } : { ...next, turn: 'enemy' };
     });
   }, [battleState, player, addLog]);
 
@@ -150,14 +182,10 @@ export function useGameState() {
       return { ...p, hp: newHp, inventory: newInv };
     });
     if (inBattle && item.effect === 'buff') {
-      setBattleState(prev => prev
-        ? { ...prev, buffs: { ...prev.buffs, atk: prev.buffs.atk + item.value } }
-        : prev);
+      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, atk: prev.buffs.atk + item.value } } : prev);
       addLog(`✨ You use ${item.name}! ATK +${item.value} for this battle.`, 'buff');
     }
-    if (inBattle) {
-      setBattleState(prev => prev ? { ...prev, turn: 'enemy' } : prev);
-    }
+    if (inBattle) setBattleState(prev => prev ? { ...prev, turn: 'enemy' } : prev);
   }, [addLog]);
 
   const enemyAttack = useCallback(() => {
@@ -166,17 +194,11 @@ export function useGameState() {
     const bonus = isDefending ? (battleState.defendBonus || 0) : 0;
     const def = player.def + player.armor.def + bonus;
     const dmg = Math.max(1, battleState.enemy.atk - def + Math.floor(Math.random() * 6) - 2);
-
     addLog(`${battleState.enemy.icon} ${battleState.enemy.name} attacks you for ${dmg} damage!`, 'danger');
-
     setPlayer(p => ({ ...p, hp: Math.max(0, p.hp - dmg) }));
     setBattleState(prev => ({
-      ...prev,
-      turn: 'player',
-      defendBonus: 0,
-      round: (prev.round || 1) + 1,
+      ...prev, turn: 'player', defendBonus: 0, round: (prev.round || 1) + 1,
       lastDmg: { value: dmg, isCrit: false, target: 'player', id: Date.now() },
-      lastHit: { target: 'player', id: Date.now() },
     }));
   }, [battleState, player, addLog]);
 
@@ -184,61 +206,29 @@ export function useGameState() {
     if (!battleState) return;
     const { enemy } = battleState;
     addLog(`🏆 You defeated ${enemy.name}! +${enemy.xp} XP, +${enemy.gold} Gold`, 'victory');
-
-    // Advance quests before updating player
     advanceQuests('kill', enemy.id);
-
     setPlayer(p => {
-      let newXp = p.xp + enemy.xp;
-      let newLevel = p.level;
-      let newMaxHp = p.maxHp;
-      let newAtk = p.atk;
-      let newDef = p.def;
-      let leveledUp = false;
-
+      let newXp = p.xp + enemy.xp, newLevel = p.level;
+      let newMaxHp = p.maxHp, newAtk = p.atk, newDef = p.def, leveledUp = false;
       while (newXp >= getXpToNext(newLevel)) {
-        newXp -= getXpToNext(newLevel);
-        newLevel++;
-        const stats = getLevelStats(newLevel);
-        newMaxHp = stats.maxHp;
-        newAtk = stats.atk;
-        newDef = stats.def;
-        leveledUp = true;
+        newXp -= getXpToNext(newLevel); newLevel++;
+        const s = getLevelStats(newLevel);
+        newMaxHp = s.maxHp; newAtk = s.atk; newDef = s.def; leveledUp = true;
       }
-
-      if (leveledUp) {
-        addLog(`⭐ Level Up! You are now Level ${newLevel}!`, 'levelup');
-        notify(`Level Up! → Level ${newLevel}`, 'levelup');
-      }
-
-      const defeatedBosses = enemy.isBoss
-        ? [...p.defeatedBosses, enemy.id]
-        : p.defeatedBosses;
-
+      if (leveledUp) { addLog(`⭐ Level Up! You are now Level ${newLevel}!`, 'levelup'); notify(`Level Up! → Level ${newLevel}`, 'levelup'); }
       return {
-        ...p,
-        xp: newXp,
-        xpToNext: getXpToNext(newLevel),
-        level: newLevel,
-        maxHp: newMaxHp,
-        hp: leveledUp ? newMaxHp : p.hp,
-        atk: newAtk,
-        def: newDef,
-        gold: p.gold + enemy.gold,
-        totalKills: p.totalKills + 1,
-        defeatedBosses,
+        ...p, xp: newXp, xpToNext: getXpToNext(newLevel), level: newLevel,
+        maxHp: newMaxHp, hp: leveledUp ? newMaxHp : p.hp, atk: newAtk, def: newDef,
+        gold: p.gold + enemy.gold, totalKills: p.totalKills + 1,
+        defeatedBosses: enemy.isBoss ? [...p.defeatedBosses, enemy.id] : p.defeatedBosses,
       };
     });
-
     setBattleState(null);
-    if (enemy.id === 'shadow_king') {
-      setTimeout(() => setScreen('victory'), 500);
-    } else {
-      setTimeout(() => setScreen('explore'), 300);
-    }
+    if (enemy.id === 'shadow_king') setTimeout(() => setScreen('victory'), 500);
+    else setTimeout(() => setScreen('explore'), 300);
   }, [battleState, addLog, notify, advanceQuests]);
 
-  // ── Shop ─────────────────────────────────────────────────────────────────────
+  // ── Shop ──────────────────────────────────────────────────────────────────
   const buyItem = useCallback((item) => {
     if (player.gold < item.price) { notify('Not enough gold!', 'error'); return; }
     if (WEAPONS.find(w => w.id === item.id)) {
@@ -260,28 +250,16 @@ export function useGameState() {
     notify('Fully rested!', 'success');
   }, [addLog, notify]);
 
-  // ── Save / Reset ─────────────────────────────────────────────────────────────
-  const resetGame = useCallback(() => {
-    deleteSave();
-    setPlayer(JSON.parse(JSON.stringify(INITIAL_PLAYER)));
-    setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
+  const goToTitle = useCallback(() => {
+    setActiveSlot(null);
     setBattleState(null);
-    setLog([]);
     setScreen('title');
   }, []);
 
-  const startNewGame = useCallback(() => {
-    deleteSave();
-    setPlayer(JSON.parse(JSON.stringify(INITIAL_PLAYER)));
-    setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
-    setBattleState(null);
-    setLog([]);
-    setScreen('explore');
-  }, []);
-
   return {
-    player, screen, setScreen, battleState, log, notification, quests,
+    player, screen, setScreen, battleState, log, notification, quests, activeSlot,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
-    resolveVictory, useItem, buyItem, rest, resetGame, startNewGame, claimQuest, addLog, notify,
+    resolveVictory, useItem, buyItem, rest, claimQuest, addLog, notify,
+    loadSlot, eraseSlot, goToTitle,
   };
 }

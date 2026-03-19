@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useGameState, hasSaveData, deleteSave } from './useGameState';
+import { useGameState, getAllSlots } from './useGameState';
 import HUD from './HUD';
 import ExploreScreen from './ExploreScreen';
 import BattleScreen from './BattleScreen';
 import ShopScreen from './ShopScreen';
 import InventoryModal from './InventoryModal';
 import QuestBoard from './QuestBoard';
+import SaveSlotPicker from './SaveSlotPicker';
 import { TitleScreen, GameOverScreen, VictoryScreen } from './SpecialScreens';
 import './App.css';
 
@@ -13,14 +14,19 @@ export default function App() {
   const {
     player, screen, setScreen, battleState, log, notification, quests,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
-    resolveVictory, useItem, buyItem, rest, resetGame, startNewGame, claimQuest, addLog,
+    resolveVictory, useItem, buyItem, rest, claimQuest, addLog,
+    loadSlot, eraseSlot, goToTitle,
   } = useGameState();
 
-  const [showShop, setShowShop]           = useState(false);
+  const [showShop,      setShowShop]      = useState(false);
   const [showInventory, setShowInventory] = useState(false);
-  const [showQuests, setShowQuests]       = useState(false);
+  const [showQuests,    setShowQuests]    = useState(false);
+  const [slotPicker,    setSlotPicker]    = useState(null); // null | 'load' | 'new'
 
-  // Check player death during battle
+  // Count filled slots for title screen
+  const filledSlots = getAllSlots().filter(s => !s.empty).length;
+
+  // Player death detection
   useEffect(() => {
     if (player.hp <= 0 && screen === 'battle') {
       setTimeout(() => setScreen('gameover'), 600);
@@ -28,8 +34,7 @@ export default function App() {
   }, [player.hp, screen, setScreen]);
 
   const handleFlee = () => {
-    const success = Math.random() > 0.4;
-    if (success) {
+    if (Math.random() > 0.4) {
       addLog('💨 You fled from battle!', 'travel');
       setScreen('explore');
     } else {
@@ -38,16 +43,27 @@ export default function App() {
     }
   };
 
+  // ── Title screen ────────────────────────────────────────────────────────────
   if (screen === 'title') return (
-    <TitleScreen
-      hasSave={hasSaveData()}
-      onContinue={() => setScreen('explore')}
-      onStart={startNewGame}
-      onEraseSave={() => { deleteSave(); window.location.reload(); }}
-    />
+    <>
+      <TitleScreen
+        hasAnySave={filledSlots || null}
+        onContinue={() => setSlotPicker('load')}
+        onNewGame={() => setSlotPicker('new')}
+      />
+      {slotPicker && (
+        <SaveSlotPicker
+          mode={slotPicker}
+          onSelect={(slot) => { setSlotPicker(null); loadSlot(slot); }}
+          onErase={(slot) => { eraseSlot(slot); setSlotPicker(null); setTimeout(() => setSlotPicker(slotPicker), 50); }}
+          onClose={() => setSlotPicker(null)}
+        />
+      )}
+    </>
   );
-  if (screen === 'gameover') return <GameOverScreen player={player} onRestart={startNewGame} />;
-  if (screen === 'victory')  return <VictoryScreen  player={player} onRestart={startNewGame} />;
+
+  if (screen === 'gameover') return <GameOverScreen player={player} onRestart={goToTitle} />;
+  if (screen === 'victory')  return <VictoryScreen  player={player} onRestart={goToTitle} />;
 
   const readyQuests = quests.filter(q => q.status === 'completed').length;
 
@@ -77,7 +93,6 @@ export default function App() {
             log={log}
           />
         )}
-
         {screen === 'battle' && battleState && (
           <BattleScreen
             player={player}
@@ -93,15 +108,9 @@ export default function App() {
         )}
       </main>
 
-      {showShop && (
-        <ShopScreen player={player} onBuy={buyItem} onClose={() => setShowShop(false)} />
-      )}
-      {showInventory && (
-        <InventoryModal player={player} onUse={(item) => useItem(item, false)} onClose={() => setShowInventory(false)} />
-      )}
-      {showQuests && (
-        <QuestBoard quests={quests} onClaim={claimQuest} onClose={() => setShowQuests(false)} />
-      )}
+      {showShop      && <ShopScreen     player={player} onBuy={buyItem}              onClose={() => setShowShop(false)}      />}
+      {showInventory && <InventoryModal player={player} onUse={i => useItem(i,false)} onClose={() => setShowInventory(false)} />}
+      {showQuests    && <QuestBoard     quests={quests}  onClaim={claimQuest}         onClose={() => setShowQuests(false)}    />}
     </div>
   );
 }
