@@ -162,14 +162,14 @@ export const QUESTS = [
     reward: { gold: 120, xp: 200 },
   },
   {
-    id: 'shadow_king_quest',
-    title: 'End the Darkness',
-    description: 'Defeat the Shadow King and restore light to Vor\'thaan.',
-    icon: '👑',
+    id: 'ruins_delver',
+    title: 'Ruins Delver',
+    description: 'Shadow Knights guard the Ancient Ruins. Cut down 3 of them to claim the bounty.',
+    icon: '🏚️',
     type: 'kill_enemy',
-    target: 'shadow_king',
-    goal: 1,
-    reward: { gold: 500, xp: 1000 },
+    target: 'shadow_knight',
+    goal: 3,
+    reward: { gold: 250, xp: 450 },
   },
 ];
 

@@ -37,7 +37,7 @@ A dark fantasy action/adventure browser RPG built with **React + Vite**. No exte
 | Wolf Hunter | Slay 3 Dire Wolves | 60g + 90 XP |
 | Into the Dark | Visit the Dark Wood | 50g + 80 XP |
 | Orc Bane | Slay 3 Orcs | 120g + 200 XP |
-| End the Darkness | Defeat the Shadow King | 500g + 1000 XP |
+| Ruins Delver | Slay 3 Shadow Knights | 250g + 450 XP |
 
 ## 💾 Save System
 
@@ -52,6 +52,7 @@ A dark fantasy action/adventure browser RPG built with **React + Vite**. No exte
 All audio is procedurally generated via the **Web Audio API** — no audio files needed.
 
 ### Music tracks
+
 | Track | Plays during |
 |-------|-------------|
 | Title | Title, Game Over, Victory screens |
@@ -60,9 +61,8 @@ All audio is procedurally generated via the **Web Audio API** — no audio files
 | Boss | Shadow King encounter |
 
 ### Sound effects
-Attack, critical hit, taking damage, heal, level-up fanfare, victory, death, purchase, flee, travel, menu click.
 
-Audio settings (Music volume + SFX volume) are saved to `localStorage` and persist between sessions. Access via the 🎵 button in the HUD.
+Attack, critical hit, taking damage, heal, level-up fanfare, victory, death, purchase, flee, travel, menu click. Access volume controls via the 🎵 button in the HUD. Settings persist between sessions.
 
 ## 🚀 Getting Started
 
