@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useGameState, getAllSlots } from './useGameState';
+import { useGameState, getAllSlots, readSlot } from './useGameState';
 import { useAudio } from './useAudio';
 import HUD from './HUD';
 import ExploreScreen from './ExploreScreen';
@@ -120,6 +120,9 @@ export default function App() {
       )}
       {newGameSlot && (
         <NewGameSetup
+          existingNames={getAllSlots()
+            .filter(s => !s.empty && s.slot !== newGameSlot)
+            .map(s => s.player.name)}
           onStart={({ name, difficulty }) => {
             setNewGameSlot(null);
             loadSlot(newGameSlot, { name, difficulty });
@@ -141,14 +144,31 @@ export default function App() {
   );
 
   if (screen === 'victory') return (
-    <VictoryScreen
-      player={player}
-      activeSlot={activeSlot}
-      onNewGame={() => { clearVictoryAndGoTitle(); setTimeout(() => setSlotPicker('new'), 50); }}
-      onLoadSlot={(slot) => { loadSlot(slot); }}
-      onEraseSlot={eraseSlot}
-      onClearVictory={clearVictoryAndGoTitle}
-    />
+    <>
+      <VictoryScreen
+        player={player}
+        activeSlot={activeSlot}
+        onNewGame={() => { clearVictoryAndGoTitle(); setTimeout(() => setSlotPicker('new'), 50); }}
+        onLoadSlot={(slot) => {
+          if (readSlot(slot)) {
+            loadSlot(slot);
+          } else {
+            setNewGameSlot(slot);
+          }
+        }}
+        onEraseSlot={eraseSlot}
+        onClearVictory={clearVictoryAndGoTitle}
+      />
+      {newGameSlot && (
+        <NewGameSetup
+          onStart={({ name, difficulty }) => {
+            setNewGameSlot(null);
+            loadSlot(newGameSlot, { name, difficulty });
+          }}
+          onClose={() => setNewGameSlot(null)}
+        />
+      )}
+    </>
   );
 
   return (

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getAllSlots } from './useGameState';
+import { DIFFICULTIES } from './gameData';
 import styles from './SaveSlotPicker.module.css';
 
 function formatDate(iso) {
@@ -9,10 +10,11 @@ function formatDate(iso) {
     ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function SaveSlotPicker({ mode, onSelect, onErase, onClose }) {
-  // mode: 'load' | 'new'
-  const slots = getAllSlots();
+export default function SaveSlotPicker({ mode, onSelect, onErase, onClose, allowEmpty = false }) {
+  const [slots, setSlots] = useState(() => getAllSlots());
   const [confirmErase, setConfirmErase] = useState(null);
+
+  const refreshSlots = () => setSlots(getAllSlots());
 
   const handleSlotClick = (slot) => {
     if (mode === 'new' && !slot.empty) {
@@ -27,7 +29,7 @@ export default function SaveSlotPicker({ mode, onSelect, onErase, onClose }) {
       <div className={styles.modal}>
         <div className={styles.header}>
           <h2 className={styles.title}>
-            {mode === 'load' ? '▶ Continue Adventure' : '⚔️ New Game — Choose Slot'}
+            {mode === 'load' && allowEmpty ? '📂 Choose a Slot' : mode === 'load' ? '▶ Continue Adventure' : '⚔️ New Game — Choose Slot'}
           </h2>
           <button className={styles.closeBtn} onClick={onClose}>✕</button>
         </div>
@@ -38,13 +40,13 @@ export default function SaveSlotPicker({ mode, onSelect, onErase, onClose }) {
               <button
                 className={styles.slotMain}
                 onClick={() => handleSlotClick(slot)}
-                disabled={mode === 'load' && slot.empty}
+                disabled={mode === 'load' && slot.empty && !allowEmpty}
               >
                 <div className={styles.slotLabel}>Slot {slot.slot}</div>
 
                 {slot.empty ? (
                   <div className={styles.emptyText}>
-                    {mode === 'new' ? '+ New Game' : 'Empty'}
+                    {mode === 'new' || allowEmpty ? '+ New Game' : 'Empty'}
                   </div>
                 ) : (
                   <div className={styles.slotInfo}>
@@ -55,6 +57,9 @@ export default function SaveSlotPicker({ mode, onSelect, onErase, onClose }) {
                       <span>Lv.{slot.player.level}</span>
                       <span>⚔️ {slot.player.totalKills} kills</span>
                       <span>💰 {slot.player.gold}g</span>
+                      <span className={`${styles.diffBadge} ${styles[`diff_${slot.difficulty}`]}`}>
+                        {DIFFICULTIES[slot.difficulty]?.icon} {DIFFICULTIES[slot.difficulty]?.label}
+                      </span>
                     </div>
                     <div className={styles.slotLocation}>
                       📍 {slot.player.location.replace(/_/g, ' ')}
@@ -89,7 +94,12 @@ export default function SaveSlotPicker({ mode, onSelect, onErase, onClose }) {
                 <button
                   className={styles.confirmYes}
                   onClick={() => {
-                    confirmErase.reason === 'overwrite' ? onSelect(confirmErase.slot) : onErase(confirmErase.slot);
+                    if (confirmErase.reason === 'overwrite') {
+                      onSelect(confirmErase.slot);
+                    } else {
+                      onErase(confirmErase.slot);
+                      refreshSlots();
+                    }
                     setConfirmErase(null);
                   }}
                 >

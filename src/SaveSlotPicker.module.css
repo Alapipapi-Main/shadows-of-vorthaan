@@ -127,11 +127,26 @@
 
 .slotStats {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
   font-size: 0.75rem;
   color: var(--gold);
   margin-bottom: 4px;
+  flex-wrap: wrap;
 }
+
+.diffBadge {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  padding: 1px 7px;
+  border-radius: 8px;
+  border: 1px solid;
+  letter-spacing: 0.04em;
+}
+
+.diff_easy   { color: #2ecc71; border-color: rgba(46,204,113,0.4);  background: rgba(46,204,113,0.08); }
+.diff_normal { color: var(--gold); border-color: var(--border);     background: rgba(201,168,76,0.08); }
+.diff_hard   { color: #e74c3c; border-color: rgba(231,76,60,0.4);   background: rgba(231,76,60,0.08); }
 
 .slotLocation {
   font-size: 0.72rem;

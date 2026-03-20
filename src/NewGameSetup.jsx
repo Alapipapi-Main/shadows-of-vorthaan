@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { DIFFICULTIES } from './gameData';
 import styles from './NewGameSetup.module.css';
 
-export default function NewGameSetup({ onStart, onClose }) {
-  const [name, setName]           = useState('');
+export default function NewGameSetup({ onStart, onClose, existingNames = [] }) {
+  const [name, setName]             = useState('');
   const [difficulty, setDifficulty] = useState('normal');
   const [nameError, setNameError]   = useState('');
 
@@ -11,6 +11,10 @@ export default function NewGameSetup({ onStart, onClose }) {
     const trimmed = name.trim();
     if (!trimmed) { setNameError('Please enter a name for your hero.'); return; }
     if (trimmed.length > 20) { setNameError('Name must be 20 characters or less.'); return; }
+    if (existingNames.some(n => n.toLowerCase() === trimmed.toLowerCase())) {
+      setNameError('A hero with this name already exists. Choose a different name.');
+      return;
+    }
     onStart({ name: trimmed, difficulty });
   };
 

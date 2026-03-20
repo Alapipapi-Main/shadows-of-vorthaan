@@ -45,6 +45,7 @@ export function getAllSlots() {
       slot: i + 1,
       empty: !data,
       player: data?.player ?? null,
+      difficulty: data?.difficulty ?? 'normal',
       savedAt: data?.savedAt ?? null,
     };
   });
