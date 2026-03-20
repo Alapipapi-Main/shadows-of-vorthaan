@@ -119,9 +119,17 @@ export function GameOverScreen({ player, activeSlot, onLoadSlot, onEraseSlot, on
 export function VictoryScreen({ player, activeSlot, onNewGame, onLoadSlot, onEraseSlot, onClearVictory }) {
   const [showPicker, setShowPicker] = useState(false);
 
+  // Check for other filled slots (excluding the just-won slot which is already cleared)
+  const otherSlots = getAllSlots().filter(s => !s.empty && s.slot !== activeSlot);
+  const hasOtherSlots = otherSlots.length > 0;
+
   const handleNewGame   = () => { onClearVictory(); };
-  const handleLoadOther = (slot) => { onEraseSlot(activeSlot); setShowPicker(false); onLoadSlot(slot); };
-  const handleTitle     = () => { onClearVictory(); };
+  const handleLoadOther = (slot) => { setShowPicker(false); onLoadSlot(slot); };
+
+  const openPicker = () => {
+    onEraseSlot(activeSlot);
+    setShowPicker(true);
+  };
 
   return (
     <div className={styles.victoryWrap}>
@@ -158,16 +166,20 @@ export function VictoryScreen({ player, activeSlot, onNewGame, onLoadSlot, onEra
             onClick={handleNewGame}
           >
             ⚔️ Start a New Adventure
-            <span className={styles.btnSub}>Pick a slot & begin again</span>
+            <span className={styles.btnSub}>Return to title & pick a slot</span>
           </button>
 
-          <button className={styles.loadOtherBtn} onClick={() => setShowPicker(true)}>
+          <button
+            className={`${styles.loadOtherBtn} ${!hasOtherSlots ? styles.disabledBtn : ''}`}
+            onClick={hasOtherSlots ? openPicker : undefined}
+            disabled={!hasOtherSlots}
+          >
             📂 Load Another Save
-            <span className={styles.btnSub}>Continue a different slot</span>
-          </button>
-
-          <button className={styles.titleBtn} onClick={handleTitle}>
-            🏠 Back to Title
+            <span className={styles.btnSub}>
+              {hasOtherSlots
+                ? `${otherSlots.length} other slot${otherSlots.length > 1 ? 's' : ''} available`
+                : 'No other saves found — start a new adventure'}
+            </span>
           </button>
         </div>
       </div>

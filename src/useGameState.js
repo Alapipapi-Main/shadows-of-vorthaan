@@ -144,14 +144,46 @@ export function useGameState() {
     }));
   }, [notify, addLog]);
 
+  // ── Shared XP helper — handles level-up correctly ─────────────────────────
+  const applyXp = useCallback((p, xpGain) => {
+    let newXp = p.xp + xpGain;
+    let newLevel = p.level;
+    let newMaxHp = p.maxHp, newAtk = p.atk, newDef = p.def;
+    let leveledUp = false;
+    while (newXp >= getXpToNext(newLevel)) {
+      newXp -= getXpToNext(newLevel);
+      newLevel++;
+      const s = getLevelStats(newLevel);
+      newMaxHp = s.maxHp; newAtk = s.atk; newDef = s.def;
+      leveledUp = true;
+    }
+    if (leveledUp) {
+      addLog(`⭐ Level Up! You are now Level ${newLevel}!`, 'levelup');
+      notify(`Level Up! → Level ${newLevel}`, 'levelup');
+    }
+    return {
+      ...p,
+      xp: newXp,
+      xpToNext: getXpToNext(newLevel),
+      level: newLevel,
+      maxHp: newMaxHp,
+      hp: leveledUp ? newMaxHp : p.hp,
+      atk: newAtk,
+      def: newDef,
+    };
+  }, [addLog, notify]);
+
   const claimQuest = useCallback((questId) => {
     const def = QUESTS.find(d => d.id === questId);
     if (!def) return;
     setQuests(prev => prev.map(q => q.id === questId ? { ...q, status: 'claimed' } : q));
-    setPlayer(p => ({ ...p, gold: p.gold + def.reward.gold, xp: p.xp + def.reward.xp }));
+    setPlayer(p => {
+      const withGold = { ...p, gold: p.gold + def.reward.gold };
+      return applyXp(withGold, def.reward.xp);
+    });
     addLog(`💰 Claimed reward: +${def.reward.gold} Gold, +${def.reward.xp} XP`, 'victory');
     notify(`Reward claimed! +${def.reward.gold}g +${def.reward.xp}xp`, 'success');
-  }, [addLog, notify]);
+  }, [addLog, notify, applyXp]);
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const travel = useCallback((locationId) => {
@@ -310,25 +342,18 @@ export function useGameState() {
     addLog(`🏆 You defeated ${enemy.name}! +${enemy.xp} XP, +${enemy.gold} Gold`, 'victory');
     advanceQuests('kill', enemy.id);
     setPlayer(p => {
-      let newXp = p.xp + enemy.xp, newLevel = p.level;
-      let newMaxHp = p.maxHp, newAtk = p.atk, newDef = p.def, leveledUp = false;
-      while (newXp >= getXpToNext(newLevel)) {
-        newXp -= getXpToNext(newLevel); newLevel++;
-        const s = getLevelStats(newLevel);
-        newMaxHp = s.maxHp; newAtk = s.atk; newDef = s.def; leveledUp = true;
-      }
-      if (leveledUp) { addLog(`⭐ Level Up! You are now Level ${newLevel}!`, 'levelup'); notify(`Level Up! → Level ${newLevel}`, 'levelup'); }
-      return {
-        ...p, xp: newXp, xpToNext: getXpToNext(newLevel), level: newLevel,
-        maxHp: newMaxHp, hp: leveledUp ? newMaxHp : p.hp, atk: newAtk, def: newDef,
-        gold: p.gold + enemy.gold, totalKills: p.totalKills + 1,
+      const withRewards = {
+        ...p,
+        gold: p.gold + enemy.gold,
+        totalKills: p.totalKills + 1,
         defeatedBosses: enemy.isBoss ? [...p.defeatedBosses, enemy.id] : p.defeatedBosses,
       };
+      return applyXp(withRewards, enemy.xp);
     });
     setBattleState(null);
     if (enemy.id === 'shadow_king') setTimeout(() => setScreen('victory'), 500);
     else setTimeout(() => setScreen('explore'), 300);
-  }, [battleState, addLog, notify, advanceQuests]);
+  }, [battleState, addLog, advanceQuests, applyXp]);
 
   // ── Shop ──────────────────────────────────────────────────────────────────
   const buyItem = useCallback((item) => {
