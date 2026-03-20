@@ -10,9 +10,10 @@ function formatDate(iso) {
 }
 
 export default function SaveSlotPicker({ mode, onSelect, onErase, onClose }) {
-  // mode: 'load' | 'new'
-  const slots = getAllSlots();
+  const [slots, setSlots] = useState(() => getAllSlots());
   const [confirmErase, setConfirmErase] = useState(null);
+
+  const refreshSlots = () => setSlots(getAllSlots());
 
   const handleSlotClick = (slot) => {
     if (mode === 'new' && !slot.empty) {
@@ -89,7 +90,12 @@ export default function SaveSlotPicker({ mode, onSelect, onErase, onClose }) {
                 <button
                   className={styles.confirmYes}
                   onClick={() => {
-                    confirmErase.reason === 'overwrite' ? onSelect(confirmErase.slot) : onErase(confirmErase.slot);
+                    if (confirmErase.reason === 'overwrite') {
+                      onSelect(confirmErase.slot);
+                    } else {
+                      onErase(confirmErase.slot);
+                      refreshSlots();
+                    }
                     setConfirmErase(null);
                   }}
                 >

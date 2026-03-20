@@ -413,7 +413,13 @@
   border-color: rgba(52,152,219,0.4);
   color: #aaddff;
 }
-.loadOtherBtn:hover { background: rgba(52,152,219,0.2); transform: translateY(-2px); }
+.loadOtherBtn:hover:not(:disabled) { background: rgba(52,152,219,0.2); transform: translateY(-2px); }
+
+.disabledBtn {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
 
 .titleBtn {
   background: rgba(255,255,255,0.03);
