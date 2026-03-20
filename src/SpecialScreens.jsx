@@ -120,14 +120,8 @@ export function VictoryScreen({ player, activeSlot, onNewGame, onLoadSlot, onEra
   const [showPicker, setShowPicker] = useState(false);
 
   const handleNewGame   = () => { onClearVictory(); };
-  const handleLoadOther = (slot) => { setShowPicker(false); onLoadSlot(slot); };
+  const handleLoadOther = (slot) => { onEraseSlot(activeSlot); setShowPicker(false); onLoadSlot(slot); };
   const handleTitle     = () => { onClearVictory(); };
-
-  const openPicker = () => {
-    // Erase the winning slot now so the picker shows it as empty straight away
-    onEraseSlot(activeSlot);
-    setShowPicker(true);
-  };
 
   return (
     <div className={styles.victoryWrap}>
@@ -167,7 +161,7 @@ export function VictoryScreen({ player, activeSlot, onNewGame, onLoadSlot, onEra
             <span className={styles.btnSub}>Pick a slot & begin again</span>
           </button>
 
-          <button className={styles.loadOtherBtn} onClick={openPicker}>
+          <button className={styles.loadOtherBtn} onClick={() => setShowPicker(true)}>
             📂 Load Another Save
             <span className={styles.btnSub}>Continue a different slot</span>
           </button>
