@@ -63,7 +63,7 @@ The next attack is previewed in the battle UI so you can plan your defence.
 
 ## 📜 Quest System
 
-6 quests available from the Tavern quest board:
+10 quests available from the Tavern quest board:
 
 | Quest | Goal | Reward |
 |-------|------|--------|
@@ -72,6 +72,10 @@ The next attack is previewed in the battle UI so you can plan your defence.
 | Wolf Hunter | Slay 3 Dire Wolves | 60g + 90 XP |
 | Into the Dark | Visit the Dark Wood | 50g + 80 XP |
 | Orc Bane | Slay 3 Orcs | 120g + 200 XP |
+| Shrine Seeker | Visit the Ruined Shrine | 70g + 110 XP |
+| Bone Breaker | Slay 3 Skeleton Warriors | 140g + 240 XP |
+| Shade Hunter | Banish 3 Cursed Shades | 150g + 260 XP |
+| Golem Smasher | Destroy 2 Stone Golems | 180g + 300 XP |
 | Ruins Delver | Slay 3 Shadow Knights | 250g + 450 XP |
 
 ## 💾 Save System

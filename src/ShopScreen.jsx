@@ -37,8 +37,9 @@ export default function ShopScreen({ player, onBuy, onClose }) {
                 {items.map(item => {
                   const owned = isOwned(item);
                   const canAfford = player.gold >= item.price;
+                  const comingSoon = item.description?.includes('coming soon');
                   return (
-                    <div key={item.id} className={`${styles.item} ${owned ? styles.owned : ''}`}>
+                    <div key={item.id} className={`${styles.item} ${owned ? styles.owned : ''} ${comingSoon ? styles.comingSoon : ''}`}>
                       <span className={styles.itemIcon}>{item.icon}</span>
                       <div className={styles.itemInfo}>
                         <div className={styles.itemName}>{item.name}</div>
@@ -48,6 +49,8 @@ export default function ShopScreen({ player, onBuy, onClose }) {
                         <div className={styles.itemPrice}>{item.price}g</div>
                         {owned ? (
                           <span className={styles.equippedTag}>Equipped</span>
+                        ) : comingSoon ? (
+                          <span className={styles.comingSoonTag}>Soon™</span>
                         ) : (
                           <button
                             className={styles.buyBtn}

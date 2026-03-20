@@ -104,10 +104,11 @@ export const ARMORS = [
 ];
 
 export const SHOP_ITEMS = [
-  { id: 'health_potion', name: 'Health Potion', type: 'consumable', effect: 'heal', value: 40, icon: '🧪', price: 30, description: 'Restores 40 HP' },
-  { id: 'greater_potion', name: 'Greater Potion', type: 'consumable', effect: 'heal', value: 80, icon: '💊', price: 60, description: 'Restores 80 HP' },
-  { id: 'elixir', name: 'Elixir of Power', type: 'consumable', effect: 'buff', value: 20, icon: '✨', price: 100, description: 'Boosts ATK by 20 for battle' },
-  { id: 'antidote', name: 'Antidote', type: 'consumable', effect: 'cure', value: 0, icon: '🌿', price: 25, description: 'Cures poison' },
+  { id: 'health_potion',   name: 'Health Potion',   type: 'consumable', effect: 'heal', value: 40,  icon: '🧪', price: 30,  description: 'Restores 40 HP' },
+  { id: 'greater_potion',  name: 'Greater Potion',  type: 'consumable', effect: 'heal', value: 80,  icon: '💊', price: 60,  description: 'Restores 80 HP' },
+  { id: 'supreme_potion',  name: 'Supreme Potion',  type: 'consumable', effect: 'heal', value: 150, icon: '⚗️', price: 120, description: 'Restores 150 HP — for the toughest fights' },
+  { id: 'elixir',          name: 'Elixir of Power', type: 'consumable', effect: 'buff', value: 20,  icon: '✨', price: 100, description: 'Boosts ATK by 20 for this battle' },
+  { id: 'antidote',        name: 'Antidote',        type: 'consumable', effect: 'cure', value: 0,   icon: '🌿', price: 25,  description: 'Cures poison (coming soon)' },
 ];
 
 // ── Quest definitions ─────────────────────────────────────────────────────────
@@ -160,6 +161,46 @@ export const QUESTS = [
     target: 'orc',
     goal: 3,
     reward: { gold: 120, xp: 200 },
+  },
+  {
+    id: 'shrine_seeker',
+    title: 'Shrine Seeker',
+    description: 'Seek out the Ruined Shrine of the Ancients hidden deep in the forest.',
+    icon: '🗿',
+    type: 'visit_location',
+    target: 'ruined_shrine',
+    goal: 1,
+    reward: { gold: 70, xp: 110 },
+  },
+  {
+    id: 'bone_breaker',
+    title: 'Bone Breaker',
+    description: 'Skeleton Warriors guard the shrine. Shatter 3 of them.',
+    icon: '💀',
+    type: 'kill_enemy',
+    target: 'skeleton_warrior',
+    goal: 3,
+    reward: { gold: 140, xp: 240 },
+  },
+  {
+    id: 'shade_hunter',
+    title: 'Shade Hunter',
+    description: 'Cursed Shades haunt the shrine grounds. Banish 3 of them.',
+    icon: '🌑',
+    type: 'kill_enemy',
+    target: 'cursed_shade',
+    goal: 3,
+    reward: { gold: 150, xp: 260 },
+  },
+  {
+    id: 'golem_smasher',
+    title: 'Golem Smasher',
+    description: 'Stone Golems block the path to the Shadow King. Destroy 2.',
+    icon: '🗿',
+    type: 'kill_enemy',
+    target: 'stone_golem',
+    goal: 2,
+    reward: { gold: 180, xp: 300 },
   },
   {
     id: 'ruins_delver',
