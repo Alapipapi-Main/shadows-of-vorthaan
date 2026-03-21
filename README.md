@@ -6,13 +6,55 @@ A dark fantasy action/adventure browser RPG built with **React + Vite**. No exte
 
 - **Explore** 6 unique locations across a cursed land
 - **Battle** 10 enemy types in turn-based combat, including a final boss with multiple attack phases
-- **Level up** — gain XP to grow HP, ATK, and DEF automatically
+- **Level up** every 2 levels choose a perk from the skill tree
+- **Status effects** — Poison, Burn, and Stun affect both players and enemies
 - **Equip** weapons and armor from the shop (5 tiers each)
-- **Use items** like potions and elixirs in and out of battle
+- **Use items** like potions, elixirs, and antidotes in and out of battle
 - **Defend** to reduce incoming damage on the next hit
-- **Flee** from battles (60% success rate)
+- **Flee** from battles (60% success rate, 100% with Shadowstep perk)
 - **Complete quests** from the Tavern notice board for bonus gold and XP
 - **Save progress** across 3 independent save slots with auto-save
+
+## 🌳 Skill Tree
+
+Every 2 levels a perk picker appears. Choose one perk from three paths — choices are permanent for the run.
+
+### 🛡️ Warrior Path — Tank
+| Perk | Effect |
+|------|--------|
+| Iron Skin | +15 max HP, +3 DEF |
+| Fortitude | +25 max HP, +5 DEF |
+| Bulwark | +40 max HP, Defend blocks 50% more damage |
+| Titan | +50 max HP, +8 DEF |
+| Juggernaut | +60 max HP, +10 DEF |
+
+### 🗡️ Rogue Path — Crit & Poison
+| Perk | Effect |
+|------|--------|
+| Keen Eye | +10% crit chance |
+| Venom Blade | 25% chance to poison enemies on hit |
+| Shadowstep | Flee always succeeds |
+| Assassin | +15% crit chance, crits deal 2.5× damage |
+| Death Mark | +20% crit chance, 40% poison chance |
+
+### 🔮 Mage Path — ATK & Burn
+| Perk | Effect |
+|------|--------|
+| Arcane Focus | +8 ATK |
+| Fire Touch | 25% chance to burn enemies on hit |
+| Spellblade | +12 ATK, attacks ignore 5 enemy DEF |
+| Inferno | +15 ATK, 40% burn chance |
+| Archmage | +20 ATK, crits always burn |
+
+## ☠️ Status Effects
+
+| Effect | Source | Damage | Duration |
+|--------|--------|--------|----------|
+| 🐍 Poison | Rogue perks, Forest Wraith, Cursed Shade | 8/turn | 3 turns |
+| 🔥 Burn | Mage perks, Shadow Knight | 12/turn | 2 turns |
+| 💫 Stun | Stone Golem | Skip turn | 1 turn |
+
+Use an **Antidote** to cure Poison and Burn instantly.
 
 ## 🎭 Character Setup
 
@@ -27,27 +69,13 @@ When starting a new game, you choose:
 | ⚔️ Normal | ×1.0      | ×1.0      | ×1.0     | ×1.0 | ×1.0 |
 | 💀 Hard   | ×1.35     | ×1.25     | ×1.35    | ×1.5 | ×1.25 |
 
-Your chosen difficulty is shown as a badge in the HUD throughout the run.
-
 ## 👑 Shadow King Boss Patterns
 
-The final boss has two phases with distinct attack rotations:
+**Phase 1** (HP > 50%): Shadow Strike → Dark Charge → Void Curse rotation
 
-**Phase 1** (HP > 50%)
-| Attack | Effect |
-|--------|--------|
-| Shadow Strike | Standard damage |
-| Dark Charge | 1.6× damage burst |
-| Void Curse | 0.8× damage + reduces your DEF by 5 |
+**Phase 2** (HP ≤ 50%): Adds Dark Ritual (self-heal 40 HP), more aggressive rotation
 
-**Phase 2** (HP ≤ 50%) — more aggressive
-| Attack | Effect |
-|--------|--------|
-| Dark Charge | 1.6× damage burst (more frequent) |
-| Void Curse | DEF reduction (more frequent) |
-| Dark Ritual | Boss heals 40 HP |
-
-The next attack is previewed in the battle UI so you can plan your defence.
+The next attack is previewed in the battle UI.
 
 ## 🗺️ Locations
 
@@ -63,7 +91,7 @@ The next attack is previewed in the battle UI so you can plan your defence.
 
 ## 📜 Quest System
 
-10 quests available from the Tavern quest board:
+12 quests available from the Tavern quest board:
 
 | Quest | Goal | Reward |
 |-------|------|--------|
@@ -77,20 +105,21 @@ The next attack is previewed in the battle UI so you can plan your defence.
 | Shade Hunter | Banish 3 Cursed Shades | 150g + 260 XP |
 | Golem Smasher | Destroy 2 Stone Golems | 180g + 300 XP |
 | Ruins Delver | Slay 3 Shadow Knights | 250g + 450 XP |
+| Poison Master | Inflict poison on 5 enemies | 160g + 280 XP |
+| Pyromancer | Burn 5 enemies | 190g + 320 XP |
+| Poison Master | Inflict poison on 5 enemies | 160g + 280 XP |
+| Pyromancer | Burn 5 enemies | 190g + 320 XP |
 
 ## 💾 Save System
 
 - **3 save slots** — each slot is independent and never overwrites another
-- **Auto-save** triggers after every meaningful action (travel, battle, purchase, level-up)
+- **Auto-save** triggers after every meaningful action
 - **Retry on death** — reloads your slot with HP fully restored
-- **Victory clears the slot** — beating the game automatically deletes the winning save so the slot is free for a new run
-- Slot data stored in `localStorage` under versioned keys (`vorhaan_save_v1_slot1` etc.)
+- **Victory clears the slot** automatically
 
 ## 🎵 Audio System
 
-All audio is procedurally generated via the **Web Audio API** — no audio files needed. Music starts automatically on the first interaction with the page (click, tap, or keypress) and crossfades smoothly between screens.
-
-### Music tracks
+All audio is procedurally generated via the **Web Audio API** — no audio files needed.
 
 | Track | Plays during |
 |-------|-------------|
@@ -101,10 +130,6 @@ All audio is procedurally generated via the **Web Audio API** — no audio files
 | Game Over | Death screen |
 | Victory | Victory screen |
 | Shop | Shop modal |
-
-### Sound effects
-
-Attack, critical hit, taking damage, heal, level-up fanfare, victory, death, purchase, flee, travel, menu click. Access volume controls via the 🎵 button in the HUD. Settings persist between sessions.
 
 ## 🚀 Getting Started
 
@@ -136,15 +161,16 @@ src/
 ├── App.css                # Global styles + toast notifications
 ├── index.css              # CSS variables & resets
 ├── main.jsx               # Entry point
-├── gameData.js            # Locations, enemies, weapons, armor, quests, difficulty, boss patterns
-├── useGameState.js        # All game logic (battle, quests, save slots, difficulty)
+├── gameData.js            # Locations, enemies, items, quests, skills, status effects
+├── useGameState.js        # All game logic (battle, quests, save slots, skills)
 ├── useAudio.js            # Procedural music & SFX via Web Audio API
-├── HUD.jsx                # Sticky stats bar (HP, XP, gold, difficulty badge, buttons)
+├── HUD.jsx                # Sticky stats bar
 ├── ExploreScreen.jsx      # World navigation & action panel
-├── BattleScreen.jsx       # Turn-based combat with animations & boss phase display
+├── BattleScreen.jsx       # Turn-based combat with animations & status effects
 ├── ShopScreen.jsx         # Buy weapons, armor & consumables
 ├── InventoryModal.jsx     # View & use carried items
 ├── QuestBoard.jsx         # Quest list with progress & claim rewards
+├── SkillTreeModal.jsx     # Level-up perk picker
 ├── SaveSlotPicker.jsx     # 3-slot save/load picker modal
 ├── NewGameSetup.jsx       # Character name & difficulty selection
 ├── AudioSettings.jsx      # Music & SFX volume sliders

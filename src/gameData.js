@@ -104,11 +104,13 @@ export const ARMORS = [
 ];
 
 export const SHOP_ITEMS = [
-  { id: 'health_potion',   name: 'Health Potion',   type: 'consumable', effect: 'heal', value: 40,  icon: '🧪', price: 30,  description: 'Restores 40 HP' },
-  { id: 'greater_potion',  name: 'Greater Potion',  type: 'consumable', effect: 'heal', value: 80,  icon: '💊', price: 60,  description: 'Restores 80 HP' },
-  { id: 'supreme_potion',  name: 'Supreme Potion',  type: 'consumable', effect: 'heal', value: 150, icon: '⚗️', price: 120, description: 'Restores 150 HP — for the toughest fights' },
-  { id: 'elixir',          name: 'Elixir of Power', type: 'consumable', effect: 'buff', value: 20,  icon: '✨', price: 100, description: 'Boosts ATK by 20 for this battle' },
-  { id: 'antidote',        name: 'Antidote',        type: 'consumable', effect: 'cure', value: 0,   icon: '🌿', price: 25,  description: 'Cures poison (coming soon)' },
+  { id: 'health_potion',   name: 'Health Potion',   type: 'consumable', effect: 'heal',         value: 40,  icon: '🧪', price: 30,  description: 'Restores 40 HP' },
+  { id: 'greater_potion',  name: 'Greater Potion',  type: 'consumable', effect: 'heal',         value: 80,  icon: '💊', price: 60,  description: 'Restores 80 HP' },
+  { id: 'supreme_potion',  name: 'Supreme Potion',  type: 'consumable', effect: 'heal',         value: 150, icon: '⚗️', price: 120, description: 'Restores 150 HP — for the toughest fights' },
+  { id: 'elixir',          name: 'Elixir of Power', type: 'consumable', effect: 'buff',         value: 20,  icon: '✨', price: 100, description: 'Boosts ATK by 20 for this battle' },
+  { id: 'antidote',        name: 'Antidote',        type: 'consumable', effect: 'cure',         value: 0,   icon: '🌿', price: 25,  description: 'Cures poison and burn' },
+  { id: 'venom_vial',      name: 'Venom Vial',      type: 'consumable', effect: 'inflict_poison', value: 0, icon: '🐍', price: 60,  description: 'Poisons the enemy for 3 turns (8 dmg/turn)' },
+  { id: 'flame_scroll',    name: 'Flame Scroll',    type: 'consumable', effect: 'inflict_burn',  value: 0,  icon: '🔥', price: 80,  description: 'Burns the enemy for 2 turns (12 dmg/turn)' },
 ];
 
 // ── Quest definitions ─────────────────────────────────────────────────────────
@@ -212,6 +214,26 @@ export const QUESTS = [
     goal: 3,
     reward: { gold: 250, xp: 450 },
   },
+  {
+    id: 'poison_master',
+    title: 'Poison Master',
+    description: 'Inflict poison on 5 enemies using Venom Blade, Death Mark, or a Venom Vial.',
+    icon: '🐍',
+    type: 'inflict_status',
+    target: 'poison',
+    goal: 5,
+    reward: { gold: 160, xp: 280 },
+  },
+  {
+    id: 'pyromancer',
+    title: 'Pyromancer',
+    description: 'Burn 5 enemies using Fire Touch, Inferno, Archmage, or a Flame Scroll.',
+    icon: '🔥',
+    type: 'inflict_status',
+    target: 'burn',
+    goal: 5,
+    reward: { gold: 190, xp: 320 },
+  },
 ];
 
 export const INITIAL_QUESTS = QUESTS.map(q => ({
@@ -238,6 +260,14 @@ export const INITIAL_PLAYER = {
   location: 'village',
   defeatedBosses: [],
   totalKills: 0,
+  perks: [],          // array of perk ids earned
+  critChance: 0.15,   // base 15%, increased by Rogue perks
+  critMult: 1.75,     // base 1.75×, increased by Assassin
+  poisonChance: 0,    // unlocked by Venom Blade
+  burnChance: 0,      // unlocked by Fire Touch
+  defPen: 0,          // DEF penetration from Spellblade
+  alwaysFlee: false,  // unlocked by Shadowstep
+  statusEffects: [],  // active status effects: { id, turnsLeft }
 };
 
 export function getXpToNext(level) {
@@ -272,4 +302,65 @@ export const BOSS_ATTACKS = {
   charge:    { name: 'Dark Charge',    atkMult: 1.6,  log: (name) => `💥 ${name} charges up and unleashes Dark Charge!` },
   curse:     { name: 'Void Curse',     atkMult: 0.8,  debuff: { def: -5 }, log: (name) => `🌑 ${name} casts Void Curse — your defences weaken!` },
   dark_heal: { name: 'Dark Ritual',    atkMult: 0.0,  heal: 40, log: (name) => `🩸 ${name} performs a Dark Ritual — restoring 40 HP!` },
+};
+
+// ── Skill tree ────────────────────────────────────────────────────────────────
+export const SKILL_PATHS = {
+  warrior: {
+    id: 'warrior',
+    name: 'Warrior',
+    icon: '🛡️',
+    color: '#3498db',
+    description: 'Tank path — more HP and defence',
+    perks: [
+      { id: 'iron_skin',    name: 'Iron Skin',     icon: '🛡️', description: '+15 max HP, +3 DEF',           bonuses: { maxHp: 15, def: 3 } },
+      { id: 'fortitude',   name: 'Fortitude',     icon: '💪', description: '+25 max HP, +5 DEF',           bonuses: { maxHp: 25, def: 5 } },
+      { id: 'bulwark',     name: 'Bulwark',       icon: '🏰', description: '+40 max HP, Defend blocks 50% more damage', bonuses: { maxHp: 40, defendBonus: 10 } },
+      { id: 'titan',       name: 'Titan',         icon: '⚓', description: '+50 max HP, +8 DEF',           bonuses: { maxHp: 50, def: 8 } },
+      { id: 'juggernaut',  name: 'Juggernaut',    icon: '🗿', description: '+60 max HP, +10 DEF',          bonuses: { maxHp: 60, def: 10 } },
+    ],
+  },
+  rogue: {
+    id: 'rogue',
+    name: 'Rogue',
+    icon: '🗡️',
+    color: '#e74c3c',
+    description: 'Crit path — higher crit chance and poison attacks',
+    perks: [
+      { id: 'keen_eye',    name: 'Keen Eye',      icon: '👁️', description: '+10% crit chance',            bonuses: { critChance: 0.10 } },
+      { id: 'venom_blade', name: 'Venom Blade',   icon: '🐍', description: 'Attacks have 25% chance to poison enemies (3 turns, 8 dmg/turn)', bonuses: { poisonChance: 0.25 } },
+      { id: 'shadowstep',  name: 'Shadowstep',    icon: '👤', description: 'Flee always succeeds',        bonuses: { alwaysFlee: true } },
+      { id: 'assassin',    name: 'Assassin',      icon: '🎯', description: '+15% crit chance, crits deal 2.5× damage', bonuses: { critChance: 0.15, critMult: 0.75 } },
+      { id: 'deathmark',   name: 'Death Mark',    icon: '💀', description: '+20% crit chance, 40% poison chance', bonuses: { critChance: 0.20, poisonChance: 0.15 } },
+    ],
+  },
+  mage: {
+    id: 'mage',
+    name: 'Mage',
+    icon: '🔮',
+    color: '#9b59b6',
+    description: 'ATK path — high damage and burn attacks',
+    perks: [
+      { id: 'arcane_focus', name: 'Arcane Focus', icon: '🔮', description: '+8 ATK',                      bonuses: { atk: 8 } },
+      { id: 'fire_touch',   name: 'Fire Touch',   icon: '🔥', description: 'Attacks have 25% chance to burn enemies (2 turns, 12 dmg/turn)', bonuses: { burnChance: 0.25 } },
+      { id: 'spellblade',   name: 'Spellblade',   icon: '⚡', description: '+12 ATK, spells ignore 5 enemy DEF', bonuses: { atk: 12, defPen: 5 } },
+      { id: 'inferno',      name: 'Inferno',      icon: '🌋', description: '+15 ATK, 40% burn chance',    bonuses: { atk: 15, burnChance: 0.15 } },
+      { id: 'archmage',     name: 'Archmage',     icon: '🌟', description: '+20 ATK, crits always burn',  bonuses: { atk: 20, critBurn: true } },
+    ],
+  },
+};
+
+// ── Status effects ────────────────────────────────────────────────────────────
+export const STATUS_EFFECTS = {
+  poison: { id: 'poison', name: 'Poison',  icon: '🐍', color: '#2ecc71', damage: 8,  duration: 3, description: 'Takes 8 damage per turn for 3 turns' },
+  burn:   { id: 'burn',   name: 'Burn',    icon: '🔥', color: '#e67e22', damage: 12, duration: 2, description: 'Takes 12 damage per turn for 2 turns' },
+  stun:   { id: 'stun',   name: 'Stunned', icon: '💫', color: '#f1c40f', damage: 0,  duration: 1, description: 'Skips next turn' },
+};
+
+// Enemies that can inflict status effects on the player
+export const ENEMY_STATUS_CHANCE = {
+  forest_wraith: { effect: 'poison', chance: 0.30 },
+  cursed_shade:  { effect: 'poison', chance: 0.35 },
+  stone_golem:   { effect: 'stun',   chance: 0.25 },
+  shadow_knight: { effect: 'burn',   chance: 0.20 },
 };

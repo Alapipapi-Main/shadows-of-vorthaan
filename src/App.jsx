@@ -9,6 +9,7 @@ import InventoryModal from './InventoryModal';
 import QuestBoard from './QuestBoard';
 import SaveSlotPicker from './SaveSlotPicker';
 import NewGameSetup from './NewGameSetup';
+import SkillTreeModal from './SkillTreeModal';
 import AudioSettings from './AudioSettings';
 import { TitleScreen, GameOverScreen, VictoryScreen } from './SpecialScreens';
 import './App.css';
@@ -16,6 +17,7 @@ import './App.css';
 export default function App() {
   const {
     player, screen, setScreen, battleState, log, notification, quests, activeSlot, difficulty,
+    pendingLevelUp, pickPerk,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
     resolveVictory, useItem, buyItem, rest, claimQuest, addLog,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
@@ -57,7 +59,8 @@ export default function App() {
   const handleDefend = () => { playSfx('menuClick'); playerDefend(); };
 
   const handleFlee = () => {
-    if (Math.random() > 0.4) {
+    const success = player.alwaysFlee || Math.random() > 0.4;
+    if (success) {
       playSfx('flee');
       addLog('💨 You fled from battle!', 'travel');
       setScreen('explore');
@@ -226,6 +229,12 @@ export default function App() {
           onMusicVol={setMusicVol}
           onSfxVol={setSfxVol}
           onClose={() => setShowAudio(false)}
+        />
+      )}
+      {pendingLevelUp && (
+        <SkillTreeModal
+          player={player}
+          onPick={(perkId, pathId) => { playSfx('levelUp'); pickPerk(perkId, pathId); }}
         />
       )}
     </div>

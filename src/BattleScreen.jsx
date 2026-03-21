@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { BOSS_PATTERNS, BOSS_ATTACKS } from './gameData';
+import { BOSS_PATTERNS, BOSS_ATTACKS, STATUS_EFFECTS } from './gameData';
 import styles from './BattleScreen.module.css';
 
 function FloatingNumber({ value, isCrit, target, id }) {
@@ -69,7 +69,11 @@ export default function BattleScreen({
   const enemyHpPct  = (enemy.hp / enemy.maxHp) * 100;
   const playerHpPct = (player.hp / player.maxHp) * 100;
   const isPlayerTurn = battleState.turn === 'player';
-  const potions = player.inventory.filter(i => i.type === 'consumable');
+  // Show unique item types in battle — dedupe by id, max 3 slots
+  const battleItems = player.inventory
+    .filter(i => i.type === 'consumable')
+    .filter((i, idx, arr) => arr.findIndex(x => x.id === i.id) === idx)
+    .slice(0, 3);
 
   const hpColor = pct => pct > 60 ? 'var(--hp-green)' : pct > 30 ? 'var(--hp-yellow)' : 'var(--hp-red)';
 
@@ -114,6 +118,15 @@ export default function BattleScreen({
             <div className={styles.hpFill} style={{ width: `${enemyHpPct}%`, background: hpColor(enemyHpPct) }} />
           </div>
           <div className={styles.hpText}>{enemy.hp} / {enemy.maxHp}</div>
+          {(battleState.enemyStatus || []).length > 0 && (
+            <div className={styles.statusIcons}>
+              {battleState.enemyStatus.map(s => (
+                <span key={s.id} className={styles.statusIcon} title={`${STATUS_EFFECTS[s.id]?.name} (${s.turnsLeft} turns)`}>
+                  {STATUS_EFFECTS[s.id]?.icon} <span className={styles.statusTurns}>{s.turnsLeft}</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className={styles.vsText}>⚔️</div>
@@ -132,6 +145,15 @@ export default function BattleScreen({
             <div className={styles.hpFill} style={{ width: `${playerHpPct}%`, background: hpColor(playerHpPct) }} />
           </div>
           <div className={styles.hpText}>{player.hp} / {player.maxHp}</div>
+          {(player.statusEffects || []).length > 0 && (
+            <div className={styles.statusIcons}>
+              {player.statusEffects.map(s => (
+                <span key={s.id} className={styles.statusIcon} title={`${STATUS_EFFECTS[s.id]?.name} (${s.turnsLeft} turns)`}>
+                  {STATUS_EFFECTS[s.id]?.icon} <span className={styles.statusTurns}>{s.turnsLeft}</span>
+                </span>
+              ))}
+            </div>
+          )}
           <div className={styles.statsRow}>
             <span>⚔️ {player.atk + player.weapon.atk + (battleState.buffs?.atk || 0)}</span>
             <span>🛡️ {player.def + player.armor.def}</span>
@@ -160,11 +182,16 @@ export default function BattleScreen({
           <button className={`${styles.btn} ${styles.defendBtn}`} onClick={onDefend} disabled={!isPlayerTurn}>
             🛡️ Defend
           </button>
-          {potions.length > 0 && (
-            <button className={`${styles.btn} ${styles.itemBtn}`} onClick={() => onUseItem(potions[0], true)} disabled={!isPlayerTurn}>
-              {potions[0].icon} {potions[0].name}
+          {battleItems.map(item => (
+            <button
+              key={item.id}
+              className={`${styles.btn} ${styles.itemBtn}`}
+              onClick={() => onUseItem(item, true)}
+              disabled={!isPlayerTurn}
+            >
+              {item.icon} {item.name}
             </button>
-          )}
+          ))}
           <button className={`${styles.btn} ${styles.fleeBtn}`} onClick={onFlee} disabled={!isPlayerTurn}>
             💨 Flee
           </button>

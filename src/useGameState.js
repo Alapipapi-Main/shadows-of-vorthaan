@@ -3,6 +3,7 @@ import {
   ENEMIES, LOCATIONS, WEAPONS, ARMORS,
   INITIAL_PLAYER, INITIAL_QUESTS, QUESTS,
   DIFFICULTIES, BOSS_PATTERNS, BOSS_ATTACKS,
+  SKILL_PATHS, STATUS_EFFECTS, ENEMY_STATUS_CHANCE,
   getXpToNext, getLevelStats,
 } from './gameData';
 
@@ -61,6 +62,7 @@ export function useGameState() {
   const [notification, setNotification] = useState(null);
   const [quests, setQuests]         = useState(() => JSON.parse(JSON.stringify(INITIAL_QUESTS)));
   const [difficulty, setDifficulty] = useState('normal');
+  const [pendingLevelUp, setPendingLevelUp] = useState(false); // show skill tree picker
 
   // Track latest values for auto-save without stale closure issues
   const saveRef = useRef({ player, quests, log, screen, activeSlot });
@@ -152,9 +154,10 @@ export function useGameState() {
       const def = QUESTS.find(d => d.id === q.id);
       if (!def) return q;
       let hit = false;
-      if (def.type === 'kill_any'       && type === 'kill')  hit = true;
-      if (def.type === 'kill_enemy'     && type === 'kill'  && def.target === target) hit = true;
-      if (def.type === 'visit_location' && type === 'visit' && def.target === target) hit = true;
+      if (def.type === 'kill_any'       && type === 'kill')           hit = true;
+      if (def.type === 'kill_enemy'     && type === 'kill'            && def.target === target) hit = true;
+      if (def.type === 'visit_location' && type === 'visit'           && def.target === target) hit = true;
+      if (def.type === 'inflict_status' && type === 'inflict_status'  && def.target === target) hit = true;
       if (!hit) return q;
       const newProgress = q.progress + 1;
       if (newProgress >= def.goal) {
@@ -172,16 +175,20 @@ export function useGameState() {
     let newLevel = p.level;
     let newMaxHp = p.maxHp, newAtk = p.atk, newDef = p.def;
     let leveledUp = false;
+    let skillTrigger = false;
     while (newXp >= getXpToNext(newLevel)) {
       newXp -= getXpToNext(newLevel);
       newLevel++;
       const s = getLevelStats(newLevel);
       newMaxHp = s.maxHp; newAtk = s.atk; newDef = s.def;
       leveledUp = true;
+      // Trigger skill tree every 2 levels
+      if (newLevel % 2 === 0) skillTrigger = true;
     }
     if (leveledUp) {
       addLog(`⭐ Level Up! You are now Level ${newLevel}!`, 'levelup');
       notify(`Level Up! → Level ${newLevel}`, 'levelup');
+      if (skillTrigger) setTimeout(() => setPendingLevelUp(true), 800);
     }
     return {
       ...p,
@@ -193,6 +200,35 @@ export function useGameState() {
       atk: newAtk,
       def: newDef,
     };
+  }, [addLog, notify]);
+
+  // ── Skill tree perk picker ────────────────────────────────────────────────
+  const pickPerk = useCallback((perkId, pathId) => {
+    const path = SKILL_PATHS[pathId];
+    if (!path) return;
+    const perk = path.perks.find(p => p.id === perkId);
+    if (!perk) return;
+    setPlayer(p => {
+      const b = perk.bonuses;
+      return {
+        ...p,
+        perks: [...(p.perks || []), perkId],
+        maxHp:       p.maxHp + (b.maxHp || 0),
+        hp:          p.hp    + (b.maxHp || 0), // heal the bonus HP immediately
+        atk:         p.atk   + (b.atk   || 0),
+        def:         p.def   + (b.def   || 0),
+        critChance:  (p.critChance  || 0.15) + (b.critChance  || 0),
+        critMult:    (p.critMult    || 1.75) + (b.critMult    || 0),
+        poisonChance:(p.poisonChance|| 0)    + (b.poisonChance|| 0),
+        burnChance:  (p.burnChance  || 0)    + (b.burnChance  || 0),
+        defPen:      (p.defPen      || 0)    + (b.defPen      || 0),
+        alwaysFlee:  p.alwaysFlee || b.alwaysFlee || false,
+        critBurn:    p.critBurn   || b.critBurn   || false,
+      };
+    });
+    addLog(`✨ Perk unlocked: ${perk.name}!`, 'levelup');
+    notify(`Perk unlocked: ${perk.name}!`, 'success');
+    setPendingLevelUp(false);
   }, [addLog, notify]);
 
   const claimQuest = useCallback((questId) => {
@@ -243,17 +279,45 @@ export function useGameState() {
 
   const playerAttack = useCallback(() => {
     if (!battleState || battleState.turn !== 'player') return;
+    const defPen = player.defPen || 0;
     const atk = player.atk + player.weapon.atk + battleState.buffs.atk;
-    const raw = Math.max(1, atk - battleState.enemy.def + Math.floor(Math.random() * 6) - 2);
-    const isCrit = Math.random() < 0.15;
-    const finalDmg = isCrit ? Math.floor(raw * 1.75) : raw;
-    addLog(`${isCrit ? '💥 Critical! ' : ''}You deal ${finalDmg} damage to ${battleState.enemy.name}.`, isCrit ? 'crit' : 'player');
+    const enemyDef = Math.max(0, battleState.enemy.def - defPen);
+    const raw = Math.max(1, atk - enemyDef + Math.floor(Math.random() * 6) - 2);
+    const critChance = player.critChance ?? 0.15;
+    const critMult   = player.critMult   ?? 1.75;
+    const isCrit = Math.random() < critChance;
+    const finalDmg = isCrit ? Math.floor(raw * critMult) : raw;
+
+    // Check status application
+    const poisonRoll = Math.random();
+    const burnRoll   = Math.random();
+    const applyPoison = (player.poisonChance || 0) > 0 && poisonRoll < (player.poisonChance || 0);
+    const applyBurn   = ((player.burnChance   || 0) > 0 && burnRoll   < (player.burnChance   || 0))
+                      || (isCrit && (player.critBurn || false));
+
+    addLog(`${isCrit ? '💥 Critical! ' : ''}You deal ${finalDmg} damage to ${battleState.enemy.name}.${applyPoison ? ' 🐍 Poisoned!' : ''}${applyBurn ? ' 🔥 Burned!' : ''}`, isCrit ? 'crit' : 'player');
+
+    if (applyPoison) advanceQuests('inflict_status', 'poison');
+    if (applyBurn)   advanceQuests('inflict_status', 'burn');
+
     setBattleState(prev => {
       const newHp = Math.max(0, prev.enemy.hp - finalDmg);
-      const next = { ...prev, enemy: { ...prev.enemy, hp: newHp }, lastDmg: { value: finalDmg, isCrit, target: 'enemy', id: Date.now() } };
+      let newEnemyStatus = [...(prev.enemyStatus || [])];
+      if (applyPoison && !newEnemyStatus.find(s => s.id === 'poison')) {
+        newEnemyStatus.push({ id: 'poison', turnsLeft: STATUS_EFFECTS.poison.duration });
+      }
+      if (applyBurn && !newEnemyStatus.find(s => s.id === 'burn')) {
+        newEnemyStatus.push({ id: 'burn', turnsLeft: STATUS_EFFECTS.burn.duration });
+      }
+      const next = {
+        ...prev,
+        enemy: { ...prev.enemy, hp: newHp },
+        enemyStatus: newEnemyStatus,
+        lastDmg: { value: finalDmg, isCrit, target: 'enemy', id: Date.now() },
+      };
       return newHp <= 0 ? { ...next, turn: 'resolved' } : { ...next, turn: 'enemy' };
     });
-  }, [battleState, player, addLog]);
+  }, [battleState, player, addLog, advanceQuests]);
 
   const playerDefend = useCallback(() => {
     if (!battleState || battleState.turn !== 'player') return;
@@ -268,25 +332,77 @@ export function useGameState() {
       if (idx === -1) return p;
       newInv.splice(idx, 1);
       let newHp = p.hp;
+      let newStatus = p.statusEffects || [];
       if (item.effect === 'heal') {
         const healed = Math.min(item.value, p.maxHp - p.hp);
         newHp = p.hp + healed;
         addLog(`💊 You use ${item.name} and restore ${healed} HP.`, 'heal');
       }
-      return { ...p, hp: newHp, inventory: newInv };
+      if (item.effect === 'cure') {
+        newStatus = (p.statusEffects || []).filter(s => s.id !== 'poison' && s.id !== 'burn');
+        addLog(`🌿 You use ${item.name} — poison and burn are cured!`, 'heal');
+      }
+      return { ...p, hp: newHp, inventory: newInv, statusEffects: newStatus };
     });
     if (inBattle && item.effect === 'buff') {
       setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, atk: prev.buffs.atk + item.value } } : prev);
       addLog(`✨ You use ${item.name}! ATK +${item.value} for this battle.`, 'buff');
     }
-    if (inBattle) setBattleState(prev => prev ? { ...prev, turn: 'enemy' } : prev);
-  }, [addLog]);
+    if (inBattle && item.effect === 'inflict_poison') {
+      setBattleState(prev => {
+        if (!prev) return prev;
+        const already = (prev.enemyStatus || []).find(s => s.id === 'poison');
+        if (already) { addLog(`🐍 Enemy is already poisoned!`, 'player'); return { ...prev, turn: 'enemy' }; }
+        addLog(`🐍 You use ${item.name} — enemy is poisoned!`, 'player');
+        advanceQuests('inflict_status', 'poison');
+        return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'poison', turnsLeft: 3 }], turn: 'enemy' };
+      });
+    }
+    if (inBattle && item.effect === 'inflict_burn') {
+      setBattleState(prev => {
+        if (!prev) return prev;
+        const already = (prev.enemyStatus || []).find(s => s.id === 'burn');
+        if (already) { addLog(`🔥 Enemy is already burning!`, 'player'); return { ...prev, turn: 'enemy' }; }
+        addLog(`🔥 You use ${item.name} — enemy is burning!`, 'player');
+        advanceQuests('inflict_status', 'burn');
+        return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'burn', turnsLeft: 2 }], turn: 'enemy' };
+      });
+    }
+    if (inBattle && !['inflict_poison', 'inflict_burn'].includes(item.effect)) {
+      setBattleState(prev => prev ? { ...prev, turn: 'enemy' } : prev);
+    }
+  }, [addLog, advanceQuests]);
 
   const enemyAttack = useCallback(() => {
     if (!battleState) return;
     const { enemy } = battleState;
     const isDefending = battleState.turn === 'enemy_defend';
     const defBonus = isDefending ? (battleState.defendBonus || 0) : 0;
+
+    // Tick enemy status effects (poison/burn on enemy)
+    let enemyStatusDmg = 0;
+    let newEnemyStatus = (battleState.enemyStatus || []).map(s => {
+      const effect = STATUS_EFFECTS[s.id];
+      if (effect?.damage > 0) {
+        enemyStatusDmg += effect.damage;
+        addLog(`${effect.icon} ${enemy.name} takes ${effect.damage} ${s.id} damage!`, 'player');
+      }
+      return s.turnsLeft > 1 ? { ...s, turnsLeft: s.turnsLeft - 1 } : null;
+    }).filter(Boolean);
+
+    if (enemyStatusDmg > 0) {
+      const newHp = Math.max(0, enemy.hp - enemyStatusDmg);
+      if (newHp <= 0) {
+        setBattleState(prev => ({
+          ...prev,
+          enemy: { ...prev.enemy, hp: 0 },
+          enemyStatus: newEnemyStatus,
+          turn: 'resolved',
+        }));
+        return;
+      }
+      setBattleState(prev => ({ ...prev, enemy: { ...prev.enemy, hp: newHp }, enemyStatus: newEnemyStatus }));
+    }
 
     // ── Boss pattern logic ──────────────────────────────────────────────────
     if (enemy.isBoss) {
@@ -347,14 +463,62 @@ export function useGameState() {
     // ── Normal enemy attack ─────────────────────────────────────────────────
     const def = player.def + player.armor.def + defBonus + (battleState.buffs?.def || 0);
     const dmg = Math.max(1, enemy.atk - def + Math.floor(Math.random() * 6) - 2);
-    addLog(`${enemy.icon} ${enemy.name} attacks you for ${dmg} damage!`, 'danger');
-    setPlayer(p => ({ ...p, hp: Math.max(0, p.hp - dmg) }));
+
+    // Check if enemy can inflict a status effect
+    const statusChanceDef = ENEMY_STATUS_CHANCE[enemy.id];
+    let inflictStatus = null;
+    if (statusChanceDef && Math.random() < statusChanceDef.chance) {
+      const existing = (player.statusEffects || []).find(s => s.id === statusChanceDef.effect);
+      if (!existing) inflictStatus = statusChanceDef.effect;
+    }
+
+    // Handle stun — skip player turn instead of dealing damage
+    if (inflictStatus === 'stun') {
+      addLog(`${enemy.icon} ${enemy.name} stuns you! 💫 You lose your next turn!`, 'danger');
+      setPlayer(p => ({
+        ...p,
+        statusEffects: [...(p.statusEffects || []), { id: 'stun', turnsLeft: 1 }],
+      }));
+      setBattleState(prev => ({
+        ...prev, turn: 'player', defendBonus: 0, round: (prev.round || 1) + 1, lastDmg: null,
+      }));
+      return;
+    }
+
+    const statusMsg = inflictStatus
+      ? ` ${STATUS_EFFECTS[inflictStatus]?.icon} You are ${inflictStatus}ed!`
+      : '';
+    addLog(`${enemy.icon} ${enemy.name} attacks you for ${dmg} damage!${statusMsg}`, 'danger');
+
+    // Tick existing player status effects
+    let statusDmg = 0;
+    let newStatuses = (player.statusEffects || [])
+      .map(s => {
+        if (s.id === 'stun') { addLog(`💫 You are stunned and lose your turn!`, 'danger'); return null; }
+        const effect = STATUS_EFFECTS[s.id];
+        if (effect?.damage > 0) {
+          statusDmg += effect.damage;
+          addLog(`${effect.icon} ${effect.name} deals ${effect.damage} damage!`, 'danger');
+        }
+        return s.turnsLeft > 1 ? { ...s, turnsLeft: s.turnsLeft - 1 } : null;
+      })
+      .filter(Boolean);
+
+    // Apply new status from this attack
+    if (inflictStatus && inflictStatus !== 'stun') {
+      newStatuses.push({ id: inflictStatus, turnsLeft: STATUS_EFFECTS[inflictStatus].duration });
+    }
+
+    const isStunned = (player.statusEffects || []).some(s => s.id === 'stun');
+    const totalDmg = dmg + statusDmg;
+
+    setPlayer(p => ({ ...p, hp: Math.max(0, p.hp - totalDmg), statusEffects: newStatuses }));
     setBattleState(prev => ({
       ...prev,
-      turn: 'player',
+      turn: isStunned ? 'enemy' : 'player', // if stunned, enemy goes again
       defendBonus: 0,
       round: (prev.round || 1) + 1,
-      lastDmg: { value: dmg, isCrit: false, target: 'player', id: Date.now() },
+      lastDmg: { value: totalDmg, isCrit: false, target: 'player', id: Date.now() },
     }));
   }, [battleState, player, addLog]);
 
@@ -411,6 +575,7 @@ export function useGameState() {
 
   return {
     player, screen, setScreen, battleState, log, notification, quests, activeSlot, difficulty,
+    pendingLevelUp, pickPerk,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
     resolveVictory, useItem, buyItem, rest, claimQuest, addLog, notify,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
