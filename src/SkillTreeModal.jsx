@@ -2,10 +2,11 @@ import { SKILL_PATHS } from './gameData';
 import styles from './SkillTreeModal.module.css';
 
 export default function SkillTreeModal({ player, onPick }) {
+  const perks = player.perks || [];
+
   // Work out which perk each path would offer next
   const options = Object.values(SKILL_PATHS).map(path => {
-    const earned = player.perks.filter(p => p.startsWith(path.id + '_') || SKILL_PATHS[path.id].perks.find(pk => pk.id === p));
-    const earnedInPath = player.perks.filter(id => path.perks.find(p => p.id === id));
+    const earnedInPath = perks.filter(id => path.perks.find(p => p.id === id));
     const nextPerk = path.perks[earnedInPath.length];
     return nextPerk ? { path, perk: nextPerk } : null;
   }).filter(Boolean);

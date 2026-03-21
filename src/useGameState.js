@@ -97,7 +97,20 @@ export function useGameState() {
     setActiveSlot(slot);
     if (data && !newGameOpts) {
       const p = data.player;
-      const restoredPlayer = p.hp <= 0 ? { ...p, hp: p.maxHp } : p;
+      const restoredPlayer = {
+        // Defaults for fields added after original saves were created
+        perks:        [],
+        critChance:   0.15,
+        critMult:     1.75,
+        poisonChance: 0,
+        burnChance:   0,
+        defPen:       0,
+        alwaysFlee:   false,
+        critBurn:     false,
+        statusEffects:[],
+        ...p, // saved values override defaults
+        hp: p.hp <= 0 ? p.maxHp : p.hp,
+      };
       setPlayer(restoredPlayer);
       // Merge any quests added after this save was created so they aren't missing
       const savedQuests = data.quests ?? [];
@@ -216,9 +229,10 @@ export function useGameState() {
       const b = perk.bonuses;
       return {
         ...p,
-        perks: [...(p.perks || []), perkId],
+        perks:        [...(p.perks        || []), perkId],
+        statusEffects:[...(p.statusEffects|| [])],
         maxHp:       p.maxHp + (b.maxHp || 0),
-        hp:          p.hp    + (b.maxHp || 0), // heal the bonus HP immediately
+        hp:          p.hp    + (b.maxHp || 0),
         atk:         p.atk   + (b.atk   || 0),
         def:         p.def   + (b.def   || 0),
         critChance:  (p.critChance  || 0.15) + (b.critChance  || 0),
