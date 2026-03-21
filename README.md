@@ -107,8 +107,6 @@ The next attack is previewed in the battle UI.
 | Ruins Delver | Slay 3 Shadow Knights | 250g + 450 XP |
 | Poison Master | Inflict poison on 5 enemies | 160g + 280 XP |
 | Pyromancer | Burn 5 enemies | 190g + 320 XP |
-| Poison Master | Inflict poison on 5 enemies | 160g + 280 XP |
-| Pyromancer | Burn 5 enemies | 190g + 320 XP |
 
 ## 💾 Save System
 
