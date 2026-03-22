@@ -353,6 +353,10 @@ export function useGameState() {
   }, [battleState, addLog]);
 
   const useItem = useCallback((item, inBattle = false) => {
+    // Remove item from inventory and apply player-level effects
+    let logMsg = null;
+    let logType = 'heal';
+
     setPlayer(p => {
       const newInv = [...p.inventory];
       const idx = newInv.findIndex(x => x.id === item.id);
@@ -360,22 +364,41 @@ export function useGameState() {
       newInv.splice(idx, 1);
       let newHp = p.hp;
       let newStatus = p.statusEffects || [];
+
       if (item.effect === 'heal') {
         const healed = Math.min(item.value, p.maxHp - p.hp);
         newHp = p.hp + healed;
-        addLog(`💊 You use ${item.name} and restore ${healed} HP.`, 'heal');
+        logMsg = `💊 You use ${item.name} and restore ${healed} HP.`;
+        logType = 'heal';
       }
       if (item.effect === 'cure') {
         newStatus = (p.statusEffects || []).filter(s => s.id !== 'poison' && s.id !== 'burn');
-        addLog(`🌿 You use ${item.name} — poison and burn are cured!`, 'heal');
+        logMsg = `🌿 You use ${item.name} — poison and burn are cured!`;
+        logType = 'heal';
       }
       return { ...p, hp: newHp, inventory: newInv, statusEffects: newStatus };
     });
-    if (inBattle && item.effect === 'buff') {
-      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, atk: prev.buffs.atk + item.value } } : prev);
-      addLog(`✨ You use ${item.name}! ATK +${item.value} for this battle.`, 'buff');
+
+    // Log outside setPlayer so it only fires once
+    if (item.effect === 'heal' || item.effect === 'cure') {
+      // log fires after state settles via setTimeout to avoid stale closure
+      setTimeout(() => addLog(
+        item.effect === 'cure'
+          ? `🌿 You use ${item.name} — poison and burn are cured!`
+          : `💊 You use ${item.name}!`,
+        'heal'
+      ), 0);
     }
-    if (inBattle && item.effect === 'inflict_poison') {
+
+    if (!inBattle) return; // outside battle — no turn advancement needed
+
+    // Battle-only effects
+    if (item.effect === 'buff') {
+      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, atk: prev.buffs.atk + item.value }, turn: 'enemy' } : prev);
+      addLog(`✨ You use ${item.name}! ATK +${item.value} for this battle.`, 'buff');
+      return;
+    }
+    if (item.effect === 'inflict_poison') {
       setBattleState(prev => {
         if (!prev) return prev;
         const already = (prev.enemyStatus || []).find(s => s.id === 'poison');
@@ -384,8 +407,9 @@ export function useGameState() {
         advanceQuests('inflict_status', 'poison');
         return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'poison', turnsLeft: 3 }], turn: 'enemy' };
       });
+      return;
     }
-    if (inBattle && item.effect === 'inflict_burn') {
+    if (item.effect === 'inflict_burn') {
       setBattleState(prev => {
         if (!prev) return prev;
         const already = (prev.enemyStatus || []).find(s => s.id === 'burn');
@@ -394,33 +418,27 @@ export function useGameState() {
         advanceQuests('inflict_status', 'burn');
         return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'burn', turnsLeft: 2 }], turn: 'enemy' };
       });
+      return;
     }
-    if (inBattle && item.effect === 'evasion_tonic') {
+    if (item.effect === 'evasion_tonic') {
       const alreadyActive = (battleState?.buffs?.dodgeChance ?? 0) > 0;
       if (alreadyActive) {
         addLog(`🪬 Evasion Tonic is already active!`, 'buff');
         setBattleState(prev => prev ? { ...prev, turn: 'enemy' } : prev);
       } else {
-        setBattleState(prev => prev ? {
-          ...prev,
-          buffs: { ...prev.buffs, dodgeChance: 0.30 }, // fixed 30%, not additive
-          turn: 'enemy',
-        } : prev);
+        setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, dodgeChance: 0.30 }, turn: 'enemy' } : prev);
         addLog(`🪬 You use ${item.name}! 30% dodge chance for this battle.`, 'buff');
       }
+      return;
     }
-    if (inBattle && item.effect === 'piercing_oil') {
-      setBattleState(prev => prev ? {
-        ...prev,
-        buffs: { ...prev.buffs, defPen: (prev.buffs?.defPen || 0) + item.value },
-        turn: 'enemy',
-      } : prev);
+    if (item.effect === 'piercing_oil') {
+      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, defPen: (prev.buffs?.defPen || 0) + item.value }, turn: 'enemy' } : prev);
       addLog(`🗡️ You use ${item.name}! +${item.value} DEF penetration for this battle.`, 'buff');
+      return;
     }
-    if (inBattle && !['inflict_poison', 'inflict_burn', 'evasion_tonic', 'piercing_oil'].includes(item.effect)) {
-      setBattleState(prev => prev ? { ...prev, turn: 'enemy' } : prev);
-    }
-  }, [addLog, advanceQuests]);
+    // heal/cure in battle — advance turn
+    setBattleState(prev => prev ? { ...prev, turn: 'enemy' } : prev);
+  }, [addLog, advanceQuests, battleState]);
 
   const enemyAttack = useCallback(() => {
     if (!battleState) return;
