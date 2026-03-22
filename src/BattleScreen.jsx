@@ -197,16 +197,22 @@ export default function BattleScreen({
           <button className={`${styles.btn} ${styles.defendBtn}`} onClick={onDefend} disabled={!isPlayerTurn}>
             🛡️ Defend
           </button>
-          {battleItems.map(item => (
-            <button
-              key={item.id}
-              className={`${styles.btn} ${styles.itemBtn}`}
-              onClick={() => onUseItem(item, true)}
-              disabled={!isPlayerTurn}
-            >
-              {item.icon} {item.name}
-            </button>
-          ))}
+          {battleItems.map(item => {
+            // Disable single-use battle buffs if already active
+            const alreadyActive =
+              (item.effect === 'evasion_tonic' && (battleState.buffs?.dodgeChance ?? 0) > 0);
+            return (
+              <button
+                key={item.id}
+                className={`${styles.btn} ${styles.itemBtn}`}
+                onClick={() => onUseItem(item, true)}
+                disabled={!isPlayerTurn || alreadyActive}
+                title={alreadyActive ? 'Already active this battle' : ''}
+              >
+                {item.icon} {item.name}{alreadyActive ? ' ✓' : ''}
+              </button>
+            );
+          })}
           <button className={`${styles.btn} ${styles.fleeBtn}`} onClick={onFlee} disabled={!isPlayerTurn}>
             💨 Flee
           </button>
