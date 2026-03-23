@@ -4,6 +4,7 @@ import {
   INITIAL_PLAYER, INITIAL_QUESTS, QUESTS,
   DIFFICULTIES, BOSS_PATTERNS, BOSS_ATTACKS,
   SKILL_PATHS, STATUS_EFFECTS, ENEMY_STATUS_CHANCE, ENEMY_DODGE_CHANCE,
+  RECIPES,
   getXpToNext, getLevelStats,
 } from './gameData';
 
@@ -175,6 +176,8 @@ export function useGameState() {
       if (def.type === 'kill_enemy'     && type === 'kill'            && def.target === target) hit = true;
       if (def.type === 'visit_location' && type === 'visit'           && def.target === target) hit = true;
       if (def.type === 'inflict_status' && type === 'inflict_status'  && def.target === target) hit = true;
+      if (def.type === 'craft_any'      && type === 'craft')          hit = true;
+      if (def.type === 'craft_specific' && type === 'craft'           && def.target === target) hit = true;
       if (!hit) return q;
       const newProgress = q.progress + 1;
       if (newProgress >= def.goal) {
@@ -423,6 +426,22 @@ export function useGameState() {
       });
       return;
     }
+    if (item.effect === 'reinforced_wrap') {
+      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, def: (prev.buffs?.def || 0) + item.value }, turn: 'enemy' } : prev);
+      addLog(`🪢 You use ${item.name}! +${item.value} DEF for this battle.`, 'buff');
+      return;
+    }
+    if (item.effect === 'inflict_poison_long') {
+      setBattleState(prev => {
+        if (!prev) return prev;
+        const already = (prev.enemyStatus || []).find(s => s.id === 'poison');
+        if (already) { addLog(`🐍 Enemy is already poisoned!`, 'player'); return { ...prev, turn: 'enemy' }; }
+        addLog(`☠️ You hurl the ${item.name} — enemy is poisoned for ${item.value} turns!`, 'player');
+        advanceQuests('inflict_status', 'poison');
+        return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'poison', turnsLeft: item.value }], turn: 'enemy' };
+      });
+      return;
+    }
     if (item.effect === 'evasion_tonic') {
       const alreadyActive = (battleState?.buffs?.dodgeChance ?? 0) > 0;
       if (alreadyActive) {
@@ -657,6 +676,31 @@ export function useGameState() {
     notify('Fully rested!', 'success');
   }, [addLog, notify]);
 
+  const craftItem = useCallback((recipe) => {
+    // Verify player still has the materials (guard against double-click)
+    const inv = player.inventory;
+    for (const mat of recipe.materials) {
+      const have = inv.filter(i => i.id === mat.id).length;
+      if (have < mat.qty) { notify('Missing materials!', 'error'); return; }
+    }
+    // Remove materials from inventory and add crafted result
+    setPlayer(p => {
+      let newInv = [...p.inventory];
+      for (const mat of recipe.materials) {
+        let removed = 0;
+        newInv = newInv.filter(i => {
+          if (i.id === mat.id && removed < mat.qty) { removed++; return false; }
+          return true;
+        });
+      }
+      newInv.push({ ...recipe.result });
+      return { ...p, inventory: newInv };
+    });
+    addLog(`⚒️ Crafted ${recipe.icon} ${recipe.name}!`, 'levelup');
+    notify(`Crafted ${recipe.name}!`, 'success');
+    advanceQuests('craft', recipe.id);
+  }, [player.inventory, addLog, notify, advanceQuests]);
+
   const goToTitle = useCallback(() => {
     setActiveSlot(null);
     setBattleState(null);
@@ -667,7 +711,7 @@ export function useGameState() {
     player, screen, setScreen, battleState, setBattleState, log, notification, quests, activeSlot, difficulty,
     pendingLevelUp, pickPerk,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
-    resolveVictory, useItem, buyItem, rest, claimQuest, addLog, notify,
+    resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog, notify,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
   };
 }

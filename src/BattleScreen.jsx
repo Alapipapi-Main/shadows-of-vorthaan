@@ -84,11 +84,11 @@ export default function BattleScreen({
   const playerHpPct = (player.hp / player.maxHp) * 100;
   const isPlayerTurn = battleState.turn === 'player';
   const isStunned    = battleState.turn === 'player_stunned';
-  // Show unique item types in battle — dedupe by id, max 3 slots
+  const maxBattleItems = player.inventory.some(i => i.id === 'leather_pouch') ? 5 : 3;
   const battleItems = player.inventory
     .filter(i => i.type === 'consumable')
     .filter((i, idx, arr) => arr.findIndex(x => x.id === i.id) === idx)
-    .slice(0, 3);
+    .slice(0, maxBattleItems);
 
   const hpColor = pct => pct > 60 ? 'var(--hp-green)' : pct > 30 ? 'var(--hp-yellow)' : 'var(--hp-red)';
 

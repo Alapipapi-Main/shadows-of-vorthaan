@@ -9,6 +9,7 @@ A dark fantasy action/adventure browser RPG built with **React + Vite**. No exte
 - **Level up** — at every odd level (3, 5, 7, 9, 11...) a skill tree popup lets you choose a permanent perk — until all paths are mastered
 - **Status effects** — Poison, Burn, and Stun affect both players and enemies
 - **Dodge mechanic** — Phantom Knights phase through attacks; Evasion Tonic gives you the same ability
+- **Craft items** at Gregor's Forge — combine Leather Scrap and Glowmoss into salves, wraps, draughts, and more
 - **Loot drops** — enemies have a 40% chance to drop materials or consumables from their location
 - **Equip** weapons and armor from the shop (5 tiers each)
 - **Use items** like potions, elixirs, antidotes, venom vials, and flame scrolls in battle
@@ -92,9 +93,23 @@ The next attack is previewed in the battle UI.
 | The Sunken Dungeon | High | Cave Trolls, Bone Archers, Phantom Knights | Greater Potion, Piercing Oil |
 | Ancient Ruins of Vor'thaan | Boss | Stone Golems, Shadow Knights + Shadow King | Health Potion, Elixir of Power |
 
+## ⚒️ Crafting System
+
+Visit **Gregor's Forge** (Blacksmith) and select **Craft Items** to combine materials dropped during exploration into powerful consumables.
+
+| Recipe | Materials | Result |
+|--------|-----------|--------|
+| Healing Salve | 2× Leather Scrap | Restores 60 HP |
+| Reinforced Wrap | 3× Leather Scrap | +10 DEF for one battle |
+| Glowing Draught | 1× Glowmoss + 1× Health Potion | Restores 100 HP |
+| Toxic Flask | 2× Glowmoss | Poisons enemy for 4 turns |
+| Leather Pouch | 3× Leather Scrap + 1× Glowmoss | Expands battle item slots to 5 |
+
+Materials drop during exploration: **Leather Scrap** from the Forest Edge, **Glowmoss** from the Dark Wood.
+
 ## 📜 Quest System
 
-17 quests available from the Tavern quest board:
+19 quests available from the Tavern quest board:
 
 | Quest | Goal | Reward |
 |-------|------|--------|
@@ -114,6 +129,8 @@ The next attack is previewed in the battle UI.
 | Troll Slayer | Crush 3 Cave Trolls | 160g + 270 XP |
 | Archer Down | Silence 3 Bone Archers | 170g + 280 XP |
 | Ghost Buster | Destroy 3 Phantom Knights | 200g + 340 XP |
+| Apprentice Crafter | Craft 3 items at the Forge | 120g + 180 XP |
+| Toxic Brewer | Craft a Toxic Flask | 180g + 280 XP |
 
 ## 💾 Save System
 

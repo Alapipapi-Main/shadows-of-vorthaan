@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LOCATIONS, ENEMIES } from './gameData';
 import styles from './ExploreScreen.module.css';
 
-export default function ExploreScreen({ player, quests, onTravel, onStartBattle, onShop, onQuestBoard, onRest, log }) {
+export default function ExploreScreen({ player, quests, onTravel, onStartBattle, onShop, onCraft, onQuestBoard, onRest, log }) {
   const location = LOCATIONS[player.location];
   const [searching, setSearching] = useState(false);
 
@@ -15,11 +15,12 @@ export default function ExploreScreen({ player, quests, onTravel, onStartBattle,
     }, 600);
   };
 
-  const canRest     = player.location === 'village' || player.location === 'tavern';
-  const hasShop     = location.shopItems;
+  const canRest       = player.location === 'village' || player.location === 'tavern';
+  const hasShop       = location.shopItems;
+  const hasCrafting   = location.hasCrafting;
   const hasQuestBoard = location.hasQuestBoard;
-  const hasBoss     = location.boss && !player.defeatedBosses.includes(location.boss);
-  const readyQuests = quests.filter(q => q.status === 'completed').length;
+  const hasBoss       = location.boss && !player.defeatedBosses.includes(location.boss);
+  const readyQuests   = quests.filter(q => q.status === 'completed').length;
 
   return (
     <div className={styles.wrap}>
@@ -68,7 +69,7 @@ export default function ExploreScreen({ player, quests, onTravel, onStartBattle,
             </button>
           )}
 
-          {hasShop && (
+          {hasShop && !hasCrafting && (
             <button className={`${styles.actionBtn} ${styles.shopBtn}`} onClick={onShop}>
               <span>🛒</span>
               <div>
@@ -76,6 +77,25 @@ export default function ExploreScreen({ player, quests, onTravel, onStartBattle,
                 <div className={styles.btnSub}>Buy weapons, armor & potions</div>
               </div>
             </button>
+          )}
+
+          {hasShop && hasCrafting && (
+            <>
+              <button className={`${styles.actionBtn} ${styles.shopBtn}`} onClick={onShop}>
+                <span>🛒</span>
+                <div>
+                  <div className={styles.btnTitle}>Buy Equipment</div>
+                  <div className={styles.btnSub}>Weapons, armor & upgrades</div>
+                </div>
+              </button>
+              <button className={`${styles.actionBtn} ${styles.craftBtn}`} onClick={onCraft}>
+                <span>⚒️</span>
+                <div>
+                  <div className={styles.btnTitle}>Craft Items</div>
+                  <div className={styles.btnSub}>Combine materials at the forge</div>
+                </div>
+              </button>
+            </>
           )}
 
           {canRest && (

@@ -199,3 +199,5 @@
 
 .stat span:first-child { color: var(--text-muted); }
 .stat span:last-child { color: var(--text-bright); font-weight: 600; }
+
+.craftBtn:hover { border-color: #f39c12; background: rgba(243,156,18,0.1); }

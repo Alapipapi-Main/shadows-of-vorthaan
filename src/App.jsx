@@ -9,6 +9,7 @@ import InventoryModal from './InventoryModal';
 import QuestBoard from './QuestBoard';
 import SaveSlotPicker from './SaveSlotPicker';
 import NewGameSetup from './NewGameSetup';
+import CraftingModal from './CraftingModal';
 import SkillTreeModal from './SkillTreeModal';
 import AudioSettings from './AudioSettings';
 import { TitleScreen, GameOverScreen, VictoryScreen } from './SpecialScreens';
@@ -19,13 +20,14 @@ export default function App() {
     player, screen, setScreen, battleState, setBattleState, log, notification, quests, activeSlot, difficulty,
     pendingLevelUp, pickPerk,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
-    resolveVictory, useItem, buyItem, rest, claimQuest, addLog,
+    resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
   } = useGameState();
 
   const { musicVol, sfxVol, setMusicVol, setSfxVol, playMusic, playSfx } = useAudio();
 
   const [showShop,      setShowShop]      = useState(false);
+  const [showCraft,     setShowCraft]     = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showQuests,    setShowQuests]    = useState(false);
   const [showAudio,     setShowAudio]     = useState(false);
@@ -200,6 +202,7 @@ export default function App() {
             onTravel={handleTravel}
             onStartBattle={startBattle}
             onShop={() => setShowShop(true)}
+            onCraft={() => setShowCraft(true)}
             onQuestBoard={() => setShowQuests(true)}
             onRest={handleRest}
             log={log}
@@ -221,6 +224,7 @@ export default function App() {
       </main>
 
       {showShop      && <ShopScreen     player={player} onBuy={handleBuy}                 onClose={() => setShowShop(false)}      />}
+      {showCraft     && <CraftingModal  player={player} onCraft={(r) => { craftItem(r); }} onClose={() => setShowCraft(false)}    />}
       {showInventory && <InventoryModal player={player} difficulty={difficulty} battleState={battleState} onUse={i => handleUseItem(i, !!battleState)} onClose={() => setShowInventory(false)} />}
       {showQuests    && <QuestBoard     quests={quests}  onClaim={claimQuest}              onClose={() => setShowQuests(false)}    />}
       {showAudio     && (

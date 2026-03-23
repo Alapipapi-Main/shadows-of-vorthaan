@@ -28,6 +28,7 @@ export const LOCATIONS = {
     enemies: [],
     loot: [],
     shopItems: true,
+    hasCrafting: true,
   },
   forest_edge: {
     id: 'forest_edge',
@@ -130,7 +131,55 @@ export const SHOP_ITEMS = [
   { id: 'piercing_oil',    name: 'Piercing Oil',    type: 'consumable', effect: 'piercing_oil',   value: 15, icon: '🗡️', price: 90,  description: 'Boosts DEF penetration by 15 for this battle' },
 ];
 
-// ── Quest definitions ─────────────────────────────────────────────────────────
+// ── Crafting recipes ──────────────────────────────────────────────────────────
+export const RECIPES = [
+  {
+    id: 'healing_salve',
+    name: 'Healing Salve',
+    icon: '🩹',
+    description: 'A thick salve that restores 60 HP — better than a Health Potion.',
+    materials: [{ id: 'leather_scrap', name: 'Leather Scrap', icon: '🟫', qty: 2 }],
+    result: { id: 'healing_salve', name: 'Healing Salve', type: 'consumable', effect: 'heal', value: 60, icon: '🩹', description: 'Restores 60 HP' },
+  },
+  {
+    id: 'reinforced_wrap',
+    name: 'Reinforced Wrap',
+    icon: '🪢',
+    description: 'Strips of hardened leather wrapped around your armour. +10 DEF for one battle.',
+    materials: [{ id: 'leather_scrap', name: 'Leather Scrap', icon: '🟫', qty: 3 }],
+    result: { id: 'reinforced_wrap', name: 'Reinforced Wrap', type: 'consumable', effect: 'reinforced_wrap', value: 10, icon: '🪢', description: '+10 DEF for this battle' },
+  },
+  {
+    id: 'glowing_draught',
+    name: 'Glowing Draught',
+    icon: '💚',
+    description: 'A potion infused with Glowmoss energy. Restores 100 HP.',
+    materials: [
+      { id: 'magic_herb', name: 'Glowmoss', icon: '🌿', qty: 1 },
+      { id: 'health_potion', name: 'Health Potion', icon: '🧪', qty: 1 },
+    ],
+    result: { id: 'glowing_draught', name: 'Glowing Draught', type: 'consumable', effect: 'heal', value: 100, icon: '💚', description: 'Restores 100 HP' },
+  },
+  {
+    id: 'toxic_flask',
+    name: 'Toxic Flask',
+    icon: '☠️',
+    description: 'A concentrated Glowmoss extract. Poisons enemy for 4 turns (8 dmg/turn) — stronger than a Venom Vial.',
+    materials: [{ id: 'magic_herb', name: 'Glowmoss', icon: '🌿', qty: 2 }],
+    result: { id: 'toxic_flask', name: 'Toxic Flask', type: 'consumable', effect: 'inflict_poison_long', value: 4, icon: '☠️', description: 'Poisons enemy for 4 turns (8 dmg/turn)' },
+  },
+  {
+    id: 'leather_pouch',
+    name: 'Leather Pouch',
+    icon: '👝',
+    description: 'A sturdy pouch that expands your battle item slots from 3 to 5.',
+    materials: [
+      { id: 'leather_scrap', name: 'Leather Scrap', icon: '🟫', qty: 3 },
+      { id: 'magic_herb', name: 'Glowmoss', icon: '🌿', qty: 1 },
+    ],
+    result: { id: 'leather_pouch', name: 'Leather Pouch', type: 'passive', effect: 'expand_slots', value: 2, icon: '👝', description: 'Expands battle item slots to 5' },
+  },
+];
 export const QUESTS = [
   {
     id: 'first_blood',
@@ -290,6 +339,25 @@ export const QUESTS = [
     target: 'phantom_knight',
     goal: 3,
     reward: { gold: 200, xp: 340 },
+  },
+  {
+    id: 'apprentice_crafter',
+    title: 'Apprentice Crafter',
+    description: 'Gregor will teach you his trade. Craft 3 items at the Forge.',
+    icon: '⚒️',
+    type: 'craft_any',
+    goal: 3,
+    reward: { gold: 120, xp: 180 },
+  },
+  {
+    id: 'toxic_brewer',
+    title: 'Toxic Brewer',
+    description: 'Master the art of poison. Craft a Toxic Flask from concentrated Glowmoss.',
+    icon: '☠️',
+    type: 'craft_specific',
+    target: 'toxic_flask',
+    goal: 1,
+    reward: { gold: 180, xp: 280 },
   },
 ];
 
