@@ -183,13 +183,14 @@ src/
 ├── App.css                # Global styles + toast notifications
 ├── index.css              # CSS variables & resets
 ├── main.jsx               # Entry point
-├── gameData.js            # Locations, enemies, items, quests, skills, status effects
-├── useGameState.js        # All game logic (battle, quests, save slots, skills)
+├── gameData.js            # Locations, enemies, items, quests, skills, status effects, recipes
+├── useGameState.js        # All game logic (battle, quests, crafting, save slots, skills)
 ├── useAudio.js            # Procedural music & SFX via Web Audio API
 ├── HUD.jsx                # Sticky stats bar
 ├── ExploreScreen.jsx      # World navigation & action panel
 ├── BattleScreen.jsx       # Turn-based combat with animations & status effects
 ├── ShopScreen.jsx         # Buy weapons, armor & consumables
+├── CraftingModal.jsx      # Craft items from materials at Gregor's Forge
 ├── InventoryModal.jsx     # View & use carried items
 ├── QuestBoard.jsx         # Quest list with progress & claim rewards
 ├── SkillTreeModal.jsx     # Level-up perk picker
