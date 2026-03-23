@@ -34,7 +34,7 @@ export function TitleScreen({ onNewGame, onContinue, hasAnySave }) {
         <div className={styles.features}>
           <div className={styles.feature}><span>⚔️</span> Turn-based Combat</div>
           <div className={styles.feature}><span>🗺️</span> 7 Locations to Explore</div>
-          <div className={styles.feature}><span>📜</span> 19 Quests</div>
+          <div className={styles.feature}><span>📜</span> 20 Quests</div>
           <div className={styles.feature}><span>🌳</span> Skill Tree & Perks</div>
           <div className={styles.feature}><span>☠️</span> Status Effects</div>
           <div className={styles.feature}><span>⚒️</span> Crafting System</div>

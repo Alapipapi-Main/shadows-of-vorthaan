@@ -109,7 +109,7 @@ Materials drop during exploration: **Leather Scrap** from the Forest Edge, **Glo
 
 ## 📜 Quest System
 
-19 quests available from the Tavern quest board:
+20 quests available from the Tavern quest board:
 
 | Quest | Goal | Reward |
 |-------|------|--------|
