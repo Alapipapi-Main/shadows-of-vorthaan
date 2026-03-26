@@ -1,7 +1,7 @@
 import { DIFFICULTIES } from './gameData';
 import styles from './HUD.module.css';
 
-export default function HUD({ player, quests, difficulty, musicVol, sfxVol, onInventory, onQuestBoard, onAudio }) {
+export default function HUD({ player, quests, difficulty, musicVol, sfxVol, unlockedCount, onInventory, onQuestBoard, onAchievements, onAudio }) {
   const hpPct  = (player.hp / player.maxHp) * 100;
   const xpPct  = (player.xp / player.xpToNext) * 100;
   const hpColor = hpPct > 60 ? 'var(--hp-green)' : hpPct > 30 ? 'var(--hp-yellow)' : 'var(--hp-red)';
@@ -42,6 +42,9 @@ export default function HUD({ player, quests, difficulty, musicVol, sfxVol, onIn
         <button className={styles.questHudBtn} onClick={onQuestBoard}>
           📜 Quests
           {readyQuests > 0 && <span className={styles.hudBadge}>{readyQuests}</span>}
+        </button>
+        <button className={styles.audioBtn} onClick={onAchievements} title="Achievements & Bestiary">
+          🏆
         </button>
         <button className={styles.audioBtn} onClick={onAudio} title="Audio Settings">
           {isMuted ? '🔇' : '🎵'}

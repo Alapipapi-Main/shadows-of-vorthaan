@@ -1,0 +1,224 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 20px;
+}
+
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.9);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg-mid), var(--bg-card));
+  flex-shrink: 0;
+}
+
+.headerLeft { display: flex; flex-direction: column; gap: 3px; }
+
+.title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1rem;
+  color: var(--gold-light);
+}
+
+.progress {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.closeBtn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.closeBtn:hover { background: rgba(255,255,255,0.1); color: var(--text-bright); }
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover { color: var(--text-bright); background: rgba(255,255,255,0.03); }
+
+.activeTab {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+  background: rgba(201,168,76,0.05);
+}
+
+.content {
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Achievements ── */
+.category {}
+
+.catTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.achGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ach {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid;
+  transition: all 0.2s;
+}
+
+.unlocked {
+  border-color: rgba(201,168,76,0.3);
+  background: rgba(201,168,76,0.05);
+}
+
+.locked {
+  border-color: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.01);
+  opacity: 0.6;
+}
+
+.achIcon { font-size: 1.5rem; flex-shrink: 0; }
+
+.achInfo { flex: 1; min-width: 0; }
+
+.achTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 2px;
+}
+
+.locked .achTitle { color: var(--text-muted); }
+
+.achDesc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.achDate {
+  font-size: 0.65rem;
+  color: var(--gold);
+  opacity: 0.7;
+  margin-top: 3px;
+}
+
+/* ── Bestiary ── */
+.bestiaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 400px) { .bestiaryGrid { grid-template-columns: 1fr; } }
+
+.beastCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.beastSeen {
+  border-color: rgba(201,168,76,0.2);
+  background: rgba(201,168,76,0.03);
+}
+
+.beastUnseen {
+  border-color: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.01);
+  opacity: 0.5;
+}
+
+.beastIcon { font-size: 1.6rem; flex-shrink: 0; }
+
+.beastInfo { flex: 1; min-width: 0; }
+
+.beastName {
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 3px;
+}
+
+.beastStats {
+  display: flex;
+  gap: 8px;
+  font-size: 0.68rem;
+  color: var(--gold);
+}
+
+.beastDate {
+  font-size: 0.63rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.beastUnknown {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-style: italic;
+}

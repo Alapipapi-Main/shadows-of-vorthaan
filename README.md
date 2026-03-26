@@ -16,7 +16,8 @@ A dark fantasy action/adventure browser RPG built with **React + Vite**. No exte
 - **Defend** to reduce incoming damage on the next hit
 - **Flee** from battles (60% success rate, 100% with Shadowstep perk)
 - **Complete quests** from the Tavern notice board for bonus gold and XP
-- **Save progress** across 3 independent save slots with auto-save
+- **Achievements** — 22 persistent achievements tracked across all runs, stored independently from save slots
+- **Bestiary** — discover all 13 enemy types, track kill counts and first encounter dates
 
 ## 🌳 Skill Tree
 
@@ -132,6 +133,24 @@ Materials drop during exploration: **Leather Scrap** from the Forest Edge, **Glo
 | Apprentice Crafter | Craft 3 items at the Forge | 120g + 180 XP |
 | Toxic Brewer | Craft a Toxic Flask | 180g + 280 XP |
 
+## 🏆 Achievements & Bestiary
+
+Press the **🏆** button in the HUD to open the panel. Achievements persist across all runs in a separate `localStorage` key — erasing a save slot never resets them.
+
+### Achievement Categories
+| Category | Achievements |
+|----------|-------------|
+| ⚔️ Combat | First Blood, Veteran (50 kills), Warlord (100 kills), Untouchable, Flawless, Boss Slayer, Poisoner, Pyromaniac |
+| 🗺️ Exploration | Explorer (all 7 locations), Dungeon Diver, Shrine Seeker |
+| 📜 Quests | Bounty Hunter (5 quests), Quest Master (all 20) |
+| 🌳 Skills | First Step, Path Chosen (5 perks), Fully Mastered (15 perks) |
+| ⚒️ Crafting | Tinker (first craft), Master Crafter (5 crafts) |
+| 📖 Bestiary | Monster Hunter (encounter all 13), Exterminator (kill all types) |
+| 💀 Difficulty | Hardened (beat on Hard), Speed Runner (beat below level 8) |
+
+### 📖 Bestiary
+The Bestiary tab shows every enemy in the game. Undiscovered enemies appear as **???** until you fight them. Each entry shows level, your kill count, and first encounter date.
+
 ## 💾 Save System
 
 - **3 save slots** — each slot is independent and never overwrites another
@@ -190,7 +209,9 @@ src/
 ├── ExploreScreen.jsx      # World navigation & action panel
 ├── BattleScreen.jsx       # Turn-based combat with animations & status effects
 ├── ShopScreen.jsx         # Buy weapons, armor & consumables
-├── CraftingModal.jsx      # Craft items from materials at Gregor's Forge
+├── achievementData.js     # Achievement definitions and localStorage helpers
+├── useAchievements.js     # Achievement check hook
+├── AchievementPanel.jsx   # Achievements & Bestiary tabbed panel
 ├── InventoryModal.jsx     # View & use carried items
 ├── QuestBoard.jsx         # Quest list with progress & claim rewards
 ├── SkillTreeModal.jsx     # Level-up perk picker

@@ -7,6 +7,7 @@ import {
   RECIPES,
   getXpToNext, getLevelStats,
 } from './gameData';
+import { recordBestiaryKill, recordBestiaryEncounter } from './achievementData';
 
 const SLOT_COUNT = 3;
 const SLOT_KEY = (slot) => `vorhaan_save_v1_slot${slot}`;
@@ -63,7 +64,15 @@ export function useGameState() {
   const [notification, setNotification] = useState(null);
   const [quests, setQuests]         = useState(() => JSON.parse(JSON.stringify(INITIAL_QUESTS)));
   const [difficulty, setDifficulty] = useState('normal');
-  const [pendingLevelUp, setPendingLevelUp] = useState(false); // show skill tree picker
+  const [pendingLevelUp, setPendingLevelUp] = useState(false);
+
+  // Achievement tracking — persisted across runs in separate localStorage key
+  const [visitedLocations, setVisitedLocations] = useState([]);
+  const [totalPoisons,     setTotalPoisons]     = useState(0);
+  const [totalBurns,       setTotalBurns]       = useState(0);
+  const [totalCrafted,     setTotalCrafted]     = useState(0);
+  // Battle flags reset each fight
+  const battleFlagsRef = useRef({ damageTaken: 0, usedDefend: false, usedFlee: false });
 
   // Track latest values for auto-save without stale closure issues
   const saveRef = useRef({ player, quests, log, screen, activeSlot });
@@ -273,6 +282,7 @@ export function useGameState() {
     setPlayer(p => ({ ...p, location: locationId }));
     addLog(`You travel to ${LOCATIONS[locationId].name}.`, 'travel');
     setScreen('explore');
+    setVisitedLocations(prev => prev.includes(locationId) ? prev : [...prev, locationId]);
     advanceQuests('visit', locationId);
   }, [addLog, advanceQuests]);
 
@@ -289,6 +299,8 @@ export function useGameState() {
       gold:  Math.round(base.gold  * diff.goldMult),
       xp:    Math.round(base.xp    * diff.xpMult),
     };
+    battleFlagsRef.current = { damageTaken: 0, usedDefend: false, usedFlee: false };
+    recordBestiaryEncounter(enemyId);
     setBattleState({
       enemy,
       turn: 'player',
@@ -330,8 +342,8 @@ export function useGameState() {
 
     addLog(`${isCrit ? '💥 Critical! ' : ''}You deal ${finalDmg} damage to ${battleState.enemy.name}.${applyPoison ? ' 🐍 Poisoned!' : ''}${applyBurn ? ' 🔥 Burned!' : ''}`, isCrit ? 'crit' : 'player');
 
-    if (applyPoison) advanceQuests('inflict_status', 'poison');
-    if (applyBurn)   advanceQuests('inflict_status', 'burn');
+    if (applyPoison) { advanceQuests('inflict_status', 'poison'); setTotalPoisons(p => p + 1); }
+    if (applyBurn)   { advanceQuests('inflict_status', 'burn');   setTotalBurns(p => p + 1); }
 
     setBattleState(prev => {
       const newHp = Math.max(0, prev.enemy.hp - finalDmg);
@@ -354,6 +366,7 @@ export function useGameState() {
 
   const playerDefend = useCallback(() => {
     if (!battleState || battleState.turn !== 'player') return;
+    battleFlagsRef.current.usedDefend = true;
     addLog('🛡️ You take a defensive stance, reducing incoming damage.', 'player');
     setBattleState(prev => ({ ...prev, turn: 'enemy_defend', defendBonus: 10, lastDmg: null }));
   }, [battleState, addLog]);
@@ -411,6 +424,7 @@ export function useGameState() {
         if (already) { addLog(`🐍 Enemy is already poisoned!`, 'player'); return { ...prev, turn: 'enemy' }; }
         addLog(`🐍 You use ${item.name} — enemy is poisoned!`, 'player');
         advanceQuests('inflict_status', 'poison');
+        setTotalPoisons(p => p + 1);
         return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'poison', turnsLeft: 3 }], turn: 'enemy' };
       });
       return;
@@ -422,6 +436,7 @@ export function useGameState() {
         if (already) { addLog(`🔥 Enemy is already burning!`, 'player'); return { ...prev, turn: 'enemy' }; }
         addLog(`🔥 You use ${item.name} — enemy is burning!`, 'player');
         advanceQuests('inflict_status', 'burn');
+        setTotalBurns(p => p + 1);
         return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'burn', turnsLeft: 2 }], turn: 'enemy' };
       });
       return;
@@ -438,6 +453,7 @@ export function useGameState() {
         if (already) { addLog(`🐍 Enemy is already poisoned!`, 'player'); return { ...prev, turn: 'enemy' }; }
         addLog(`☠️ You hurl the ${item.name} — enemy is poisoned for ${item.value} turns!`, 'player');
         advanceQuests('inflict_status', 'poison');
+        setTotalPoisons(p => p + 1);
         return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'poison', turnsLeft: item.value }], turn: 'enemy' };
       });
       return;
@@ -610,6 +626,7 @@ export function useGameState() {
 
     const totalDmg = dmg + statusDmg;
 
+    battleFlagsRef.current.damageTaken += totalDmg;
     setPlayer(p => ({ ...p, hp: Math.max(0, p.hp - totalDmg), statusEffects: newStatuses }));
     setBattleState(prev => ({
       ...prev,
@@ -699,6 +716,7 @@ export function useGameState() {
     addLog(`⚒️ Crafted ${recipe.icon} ${recipe.name}!`, 'levelup');
     notify(`Crafted ${recipe.name}!`, 'success');
     advanceQuests('craft', recipe.id);
+    setTotalCrafted(p => p + 1);
   }, [player.inventory, addLog, notify, advanceQuests]);
 
   const goToTitle = useCallback(() => {
@@ -713,5 +731,7 @@ export function useGameState() {
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
     resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog, notify,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
+    // achievement tracking
+    visitedLocations, totalPoisons, totalBurns, totalCrafted, battleFlagsRef,
   };
 }

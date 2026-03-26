@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useGameState, getAllSlots, readSlot } from './useGameState';
 import { useAudio } from './useAudio';
+import useAchievements from './useAchievements';
 import HUD from './HUD';
 import ExploreScreen from './ExploreScreen';
 import BattleScreen from './BattleScreen';
@@ -12,6 +13,7 @@ import NewGameSetup from './NewGameSetup';
 import CraftingModal from './CraftingModal';
 import SkillTreeModal from './SkillTreeModal';
 import AudioSettings from './AudioSettings';
+import AchievementPanel from './AchievementPanel';
 import { TitleScreen, GameOverScreen, VictoryScreen } from './SpecialScreens';
 import './App.css';
 
@@ -20,21 +22,53 @@ export default function App() {
     player, screen, setScreen, battleState, setBattleState, log, notification, quests, activeSlot, difficulty,
     pendingLevelUp, pickPerk,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
-    resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog,
+    resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog, notify,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
+    visitedLocations, totalPoisons, totalBurns, totalCrafted, battleFlagsRef,
   } = useGameState();
 
   const { musicVol, sfxVol, setMusicVol, setSfxVol, playMusic, playSfx } = useAudio();
+  const {
+    unlocked,
+    checkCombat, checkPoison, checkBurn, checkExploration,
+    checkQuests, checkPerks, checkCrafting, checkVictory,
+  } = useAchievements(notify);
 
-  const [showShop,      setShowShop]      = useState(false);
-  const [showCraft,     setShowCraft]     = useState(false);
-  const [showInventory, setShowInventory] = useState(false);
-  const [showQuests,    setShowQuests]    = useState(false);
-  const [showAudio,     setShowAudio]     = useState(false);
-  const [slotPicker,    setSlotPicker]    = useState(null);
-  const [newGameSlot,   setNewGameSlot]   = useState(null); // slot number awaiting setup
+  const [showShop,         setShowShop]         = useState(false);
+  const [showCraft,        setShowCraft]        = useState(false);
+  const [showInventory,    setShowInventory]    = useState(false);
+  const [showQuests,       setShowQuests]       = useState(false);
+  const [showAudio,        setShowAudio]        = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [slotPicker,       setSlotPicker]       = useState(null);
+  const [newGameSlot,      setNewGameSlot]      = useState(null);
 
   const filledSlots = getAllSlots().filter(s => !s.empty).length;
+
+  // ── Achievement checks tied to game state changes ──────────────────────────
+  // Exploration
+  useEffect(() => {
+    if (visitedLocations.length > 0) checkExploration(visitedLocations);
+  }, [visitedLocations]);
+
+  // Poison / Burn milestones
+  useEffect(() => { if (totalPoisons > 0) checkPoison(totalPoisons); }, [totalPoisons]);
+  useEffect(() => { if (totalBurns   > 0) checkBurn(totalBurns);     }, [totalBurns]);
+
+  // Crafting milestones
+  useEffect(() => { if (totalCrafted > 0) checkCrafting(totalCrafted); }, [totalCrafted]);
+
+  // Quest milestones
+  useEffect(() => {
+    const claimed = quests.filter(q => q.status === 'claimed').length;
+    if (claimed > 0) checkQuests(claimed);
+  }, [quests]);
+
+  // Perk milestones
+  useEffect(() => {
+    const count = (player.perks || []).length;
+    if (count > 0) checkPerks(count);
+  }, [player.perks]);
 
   // ── Music per screen & modal ────────────────────────────────────────────────
   useEffect(() => {
@@ -48,7 +82,6 @@ export default function App() {
     }
   }, [screen, battleState?.enemy?.isBoss]);
 
-  // Shop modal overrides to shop music, restores on close
   useEffect(() => {
     if (showShop) { playMusic('shop'); return; }
     if (screen === 'title')   playMusic('title');
@@ -56,7 +89,6 @@ export default function App() {
   }, [showShop]);
 
   // ── Sound effects ──────────────────────────────────────────────────────────
-  // Intercept game actions and inject sounds
   const handleAttack = () => { playSfx('attack'); playerAttack(); };
   const handleDefend = () => { playSfx('menuClick'); playerDefend(); };
 
@@ -65,6 +97,7 @@ export default function App() {
     if (success) {
       playSfx('flee');
       addLog('💨 You fled from battle!', 'travel');
+      battleFlagsRef.current.usedFlee = true;
       setBattleState(null);
       setScreen('explore');
     } else {
@@ -84,7 +117,7 @@ export default function App() {
   const handleBuy    = (item) => { playSfx('purchase'); buyItem(item); };
   const handleRest   = ()     => { playSfx('heal'); rest(); };
 
-  // Death sound
+  // Death
   useEffect(() => {
     if (player.hp <= 0 && screen === 'battle') {
       playSfx('death');
@@ -95,13 +128,18 @@ export default function App() {
     }
   }, [player.hp, screen]);
 
-  // Victory sound
+  // Victory — fire achievement checks
   const handleResolveVictory = () => {
     playSfx('victory');
+    if (battleState?.enemy) {
+      checkCombat(player, battleState.enemy, battleFlagsRef.current);
+      if (battleState.enemy.id === 'shadow_king') {
+        checkVictory(player, difficulty);
+      }
+    }
     resolveVictory();
   };
 
-  // Enemy attack sound
   const handleEnemyTurn = () => { playSfx('hit'); enemyAttack(); };
 
   // ── Screens ────────────────────────────────────────────────────────────────
@@ -118,7 +156,7 @@ export default function App() {
           onSelect={(slot) => {
             setSlotPicker(null);
             if (slotPicker === 'new') {
-              setNewGameSlot(slot); // show name/difficulty setup before starting
+              setNewGameSlot(slot);
             } else {
               loadSlot(slot);
             }
@@ -192,8 +230,10 @@ export default function App() {
         difficulty={difficulty}
         musicVol={musicVol}
         sfxVol={sfxVol}
+        unlockedCount={Object.keys(unlocked).length}
         onInventory={() => setShowInventory(true)}
         onQuestBoard={() => setShowQuests(true)}
+        onAchievements={() => setShowAchievements(true)}
         onAudio={() => setShowAudio(true)}
       />
 
@@ -226,11 +266,12 @@ export default function App() {
         )}
       </main>
 
-      {showShop      && <ShopScreen     player={player} onBuy={handleBuy}                 onClose={() => setShowShop(false)}      />}
-      {showCraft     && <CraftingModal  player={player} onCraft={(r) => { craftItem(r); }} onClose={() => setShowCraft(false)}    />}
-      {showInventory && <InventoryModal player={player} difficulty={difficulty} battleState={battleState} onUse={i => handleUseItem(i, !!battleState)} onClose={() => setShowInventory(false)} />}
-      {showQuests    && <QuestBoard     quests={quests}  onClaim={claimQuest}              onClose={() => setShowQuests(false)}    />}
-      {showAudio     && (
+      {showShop         && <ShopScreen        player={player} onBuy={handleBuy}                          onClose={() => setShowShop(false)}         />}
+      {showCraft        && <CraftingModal     player={player} onCraft={(r) => { craftItem(r); }}         onClose={() => setShowCraft(false)}        />}
+      {showInventory    && <InventoryModal    player={player} difficulty={difficulty} battleState={battleState} onUse={i => handleUseItem(i, !!battleState)} onClose={() => setShowInventory(false)} />}
+      {showQuests       && <QuestBoard        quests={quests} onClaim={claimQuest}                       onClose={() => setShowQuests(false)}       />}
+      {showAchievements && <AchievementPanel  unlocked={unlocked}                                        onClose={() => setShowAchievements(false)} />}
+      {showAudio        && (
         <AudioSettings
           musicVol={musicVol}
           sfxVol={sfxVol}
