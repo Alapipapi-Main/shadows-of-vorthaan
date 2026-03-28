@@ -17,7 +17,7 @@ export const ACHIEVEMENTS = [
 
   // 📜 Quests
   { id: 'bounty_hunter',   icon: '📜', title: 'Bounty Hunter',   desc: 'Complete 5 quests',                            category: 'Quests' },
-  { id: 'quest_master',    icon: '🏅', title: 'Quest Master',    desc: 'Complete all 20 quests',                       category: 'Quests' },
+  { id: 'quest_master', icon: '🏅', title: 'Quest Master', desc: 'Complete all 20 quests', category: 'Quests' },
 
   // 🌳 Skill Tree
   { id: 'first_perk',      icon: '✨', title: 'First Step',      desc: 'Unlock your first perk',                       category: 'Skills' },

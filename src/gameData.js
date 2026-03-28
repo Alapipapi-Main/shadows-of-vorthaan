@@ -240,6 +240,16 @@ export const QUESTS = [
   reward: { gold: 220, xp: 350 },
   },
   {
+    id: 'wraith_banisher',
+    title: 'Wraith Banisher',
+    description: 'Forest Wraiths haunt the Dark Wood, poisoning all who wander. Banish 3 of them.',
+    icon: '👻',
+    type: 'kill_enemy',
+    target: 'forest_wraith',
+    goal: 3,
+    reward: { gold: 130, xp: 220 },
+  },
+  {
     id: 'shrine_seeker',
     title: 'Shrine Seeker',
     description: 'Seek out the Ruined Shrine of the Ancients hidden deep in the forest.',

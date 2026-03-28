@@ -87,10 +87,11 @@ export function useGameState() {
       quests,
       difficulty,
       pendingSkillPick: pendingLevelUp,
+      visitedLocations,
       log: log.slice(-20),
       savedAt: new Date().toISOString(),
     });
-  }, [player, quests, screen, activeSlot, difficulty, pendingLevelUp]);
+  }, [player, quests, screen, activeSlot, difficulty, pendingLevelUp, visitedLocations]);
 
   const addLog = useCallback((msg, type = 'normal') => {
     setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
@@ -131,6 +132,7 @@ export function useGameState() {
       setQuests(mergedQuests);
       setDifficulty(data.difficulty ?? 'normal');
       setPendingLevelUp(data.pendingSkillPick ?? false);
+      setVisitedLocations(data.visitedLocations ?? [player.location]);
       setLog(data.log ?? []);
     } else {
       // New game — apply name and difficulty from setup
@@ -139,6 +141,7 @@ export function useGameState() {
       setPlayer(base);
       setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
       setDifficulty(newGameOpts?.difficulty ?? 'normal');
+      setVisitedLocations(['village']);
       setLog([]);
     }
     setBattleState(null);
@@ -154,6 +157,7 @@ export function useGameState() {
       setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
       setDifficulty('normal');
       setPendingLevelUp(false);
+      setVisitedLocations([]);
       setLog([]);
       setBattleState(null);
       setScreen('title');
@@ -169,6 +173,7 @@ export function useGameState() {
     setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
     setDifficulty('normal');
     setPendingLevelUp(false);
+    setVisitedLocations([]);
     setBattleState(null);
     setLog([]);
     setScreen('title');
