@@ -197,6 +197,9 @@ export default function App() {
       <VictoryScreen
         player={player}
         activeSlot={activeSlot}
+        quests={quests}
+        totalCrafted={totalCrafted}
+        difficulty={difficulty}
         onNewGame={() => { clearVictoryAndGoTitle(); setTimeout(() => setSlotPicker('new'), 50); }}
         onLoadSlot={(slot) => {
           if (readSlot(slot)) {

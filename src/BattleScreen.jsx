@@ -29,6 +29,7 @@ export default function BattleScreen({
   const [enemyGlow, setEnemyGlow] = useState(false);
   const [playerGlow, setPlayerGlow] = useState(false);
   const [screenFlash, setScreenFlash] = useState(null);
+  const [showFullLog, setShowFullLog] = useState(false);
   const prevDmg = useRef(null);
 
   // Trigger animations when lastDmg changes
@@ -178,11 +179,19 @@ export default function BattleScreen({
 
       {/* Battle Log */}
       <div className={styles.battleLog}>
-        {[...log].slice(-6).reverse().map(entry => (
-          <div key={entry.id} className={`${styles.logEntry} ${styles[entry.type] || ''}`}>
-            {entry.msg}
-          </div>
-        ))}
+        <div className={styles.logHeader}>
+          <span className={styles.logTitle}>Battle Log</span>
+          <button className={styles.logToggle} onClick={() => setShowFullLog(v => !v)}>
+            {showFullLog ? '▲ Less' : '📋 Full Log'}
+          </button>
+        </div>
+        <div className={`${styles.logEntries} ${showFullLog ? styles.logExpanded : ''}`}>
+          {(showFullLog ? [...log].reverse() : [...log].slice(-6).reverse()).map(entry => (
+            <div key={entry.id} className={`${styles.logEntry} ${styles[entry.type] || ''}`}>
+              {entry.msg}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Actions */}

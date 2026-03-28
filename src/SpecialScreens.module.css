@@ -369,6 +369,7 @@
 
 .statRow span:first-child { color: var(--text-muted); font-family: 'Cinzel', serif; font-size: 0.75rem; }
 .statRow span:last-child { color: var(--text-bright); font-weight: 600; }
+.perkStr { font-size: 0.72rem !important; color: #cc88ff !important; letter-spacing: 0.02em; }
 
 /* ── Death / Victory action buttons ── */
 .deathActions {

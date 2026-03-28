@@ -123,7 +123,7 @@ export function GameOverScreen({ player, activeSlot, onLoadSlot, onEraseSlot, on
 }
 
 // ── Victory ───────────────────────────────────────────────────────────────────
-export function VictoryScreen({ player, activeSlot, onNewGame, onLoadSlot, onEraseSlot, onClearVictory }) {
+export function VictoryScreen({ player, activeSlot, quests, totalCrafted, difficulty, onNewGame, onLoadSlot, onEraseSlot, onClearVictory }) {
   const [showPicker, setShowPicker] = useState(false);
 
   // Only count slots that already have save data (excluding the winning slot)
@@ -133,16 +133,29 @@ export function VictoryScreen({ player, activeSlot, onNewGame, onLoadSlot, onEra
   const handleNewGame   = () => { onClearVictory(); };
   const handleLoadOther = (slot) => {
     setShowPicker(false);
-    onLoadSlot(slot); // App.jsx handles new-game setup if slot is empty via newGameSlot state
+    onLoadSlot(slot);
   };
 
   const openPicker = () => {
-    // Delete the winning slot from localStorage directly — do NOT call onEraseSlot
-    // which would reset React state and navigate to title before the picker renders
     deleteSlot(activeSlot);
     try { localStorage.removeItem('vorhaan_pending_victory_slot'); } catch {}
     setShowPicker(true);
   };
+
+  // Perk breakdown by path
+  const perks = player.perks || [];
+  const perkPaths = {
+    '🛡️ Warrior': perks.filter(id => ['iron_skin','fortitude','bulwark','titan','juggernaut'].includes(id)).length,
+    '🗡️ Rogue':   perks.filter(id => ['keen_eye','venom_blade','shadowstep','assassin','deathmark'].includes(id)).length,
+    '🔮 Mage':    perks.filter(id => ['arcane_focus','fire_touch','spellblade','inferno','archmage'].includes(id)).length,
+  };
+  const perkStr = Object.entries(perkPaths)
+    .filter(([, count]) => count > 0)
+    .map(([path, count]) => `${path} ×${count}`)
+    .join('  ') || 'None';
+
+  const questsClaimed = (quests || []).filter(q => q.status === 'claimed').length;
+  const diffLabel = { easy: '🌿 Easy', normal: '⚔️ Normal', hard: '💀 Hard' }[difficulty] ?? '⚔️ Normal';
 
   return (
     <div className={styles.victoryWrap}>
@@ -163,10 +176,14 @@ export function VictoryScreen({ player, activeSlot, onNewGame, onLoadSlot, onEra
         </p>
 
         <div className={styles.stats}>
+          <div className={styles.statRow}><span>Difficulty</span><span>{diffLabel}</span></div>
           <div className={styles.statRow}><span>Final Level</span><span>{player.level}</span></div>
           <div className={styles.statRow}><span>Enemies Slain</span><span>{player.totalKills}</span></div>
-          <div className={styles.statRow}><span>Gold Collected</span><span>{player.gold}</span></div>
-          <div className={styles.statRow}><span>Weapon</span><span>{player.weapon.name}</span></div>
+          <div className={styles.statRow}><span>Gold Collected</span><span>💰 {player.gold}</span></div>
+          <div className={styles.statRow}><span>Weapon</span><span>{player.weapon.icon} {player.weapon.name}</span></div>
+          <div className={styles.statRow}><span>Quests Claimed</span><span>📜 {questsClaimed} / 20</span></div>
+          <div className={styles.statRow}><span>Items Crafted</span><span>⚒️ {totalCrafted ?? 0}</span></div>
+          <div className={styles.statRow}><span>Perks Earned</span><span className={styles.perkStr}>{perkStr}</span></div>
           <div className={styles.statRow}><span>Save Slot</span><span>Slot {activeSlot} — cleared ✓</span></div>
         </div>
 

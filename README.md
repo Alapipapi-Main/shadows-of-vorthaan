@@ -17,6 +17,7 @@ A dark fantasy action/adventure browser RPG built with **React + Vite**. No exte
 - **Flee** from battles (60% success rate, 100% with Shadowstep perk)
 - **Complete quests** from the Tavern notice board for bonus gold and XP
 - **World Map** — animated SVG map showing all 7 locations with fog of war, travel by clicking reachable nodes
+- **Full battle log** — expand the battle log during combat to see the complete history of the fight
 - **Bestiary** — discover all 13 enemy types, track kill counts and first encounter dates
 
 ## 🌳 Skill Tree
