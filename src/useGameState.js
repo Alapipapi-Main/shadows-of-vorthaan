@@ -73,7 +73,7 @@ export function useGameState() {
   const [totalCrafted,     setTotalCrafted]     = useState(0);
   // Battle flags reset each fight
   const battleFlagsRef = useRef({ damageTaken: 0, usedDefend: false, usedFlee: false });
-  // Battle-only log — reset each fight, used for full log view
+  // Battle-only log — used for full log view
   const [battleLog, setBattleLog] = useState([]);
 
   // Track latest values for auto-save without stale closure issues
@@ -96,8 +96,12 @@ export function useGameState() {
   }, [player, quests, screen, activeSlot, difficulty, pendingLevelUp, visitedLocations]);
 
   const addLog = useCallback((msg, type = 'normal') => {
+  // Only add to the main adventure log if it's NOT a heal type
+  if (type !== 'heal') {
     setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
-    setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
+  }
+  // Always add everything to the battle log
+  setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
   }, []);
 
   const notify = useCallback((msg, type = 'info') => {
@@ -296,33 +300,32 @@ export function useGameState() {
 
   // ── Battle ────────────────────────────────────────────────────────────────
   const startBattle = useCallback((enemyId) => {
-    const base = JSON.parse(JSON.stringify(ENEMIES[enemyId]));
-    const diff = DIFFICULTIES[difficulty] ?? DIFFICULTIES.normal;
-    const enemy = {
-      ...base,
-      atk:   Math.round(base.atk   * diff.enemyAtkMult),
-      def:   Math.round(base.def   * diff.enemyDefMult),
-      hp:    Math.round(base.hp    * diff.enemyHpMult),
-      maxHp: Math.round(base.maxHp * diff.enemyHpMult),
-      gold:  Math.round(base.gold  * diff.goldMult),
-      xp:    Math.round(base.xp    * diff.xpMult),
-    };
-    battleFlagsRef.current = { damageTaken: 0, usedDefend: false, usedFlee: false };
-    setBattleLog([]);
-    recordBestiaryEncounter(enemyId);
-    setBattleState({
-      enemy,
-      turn: 'player',
-      buffs: { atk: 0, def: 0 },
-      round: 1,
-      bossPatternIdx: 0,
-      bossPhase: 1,
-      lastDmg: null,
-    });
-    setScreen('battle');
-    addLog(`⚔️ A ${enemy.name} appears!`, 'danger');
+  const base = JSON.parse(JSON.stringify(ENEMIES[enemyId]));
+  const diff = DIFFICULTIES[difficulty] ?? DIFFICULTIES.normal;
+  const enemy = {
+    ...base,
+    atk:   Math.round(base.atk   * diff.enemyAtkMult),
+    def:   Math.round(base.def   * diff.enemyDefMult),
+    hp:    Math.round(base.hp    * diff.enemyHpMult),
+    maxHp: Math.round(base.maxHp * diff.enemyHpMult),
+    gold:  Math.round(base.gold  * diff.goldMult),
+    xp:    Math.round(base.xp    * diff.xpMult),
+  };
+  battleFlagsRef.current = { damageTaken: 0, usedDefend: false, usedFlee: false };
+  recordBestiaryEncounter(enemyId);
+  setBattleState({
+    enemy,
+    turn: 'player',
+    buffs: { atk: 0, def: 0 },
+    round: 1,
+    bossPatternIdx: 0,
+    bossPhase: 1,
+    lastDmg: null,
+  });
+  setScreen('battle');
+  addLog(`⚔️ A ${enemy.name} appears!`, 'danger');
   }, [addLog, difficulty]);
-
+  
   const playerAttack = useCallback(() => {
     if (!battleState || battleState.turn !== 'player') return;
     const defPen = (player.defPen || 0) + (battleState.buffs?.defPen || 0);
