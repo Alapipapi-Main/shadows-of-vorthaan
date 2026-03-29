@@ -145,7 +145,8 @@ export function useGameState() {
       setPendingLevelUp(data.pendingSkillPick ?? false);
       setVisitedLocations(data.visitedLocations ?? [player.location]);
       setLog(data.log ?? []);
-    } else {
+      setBattleLog(data.battleLog ?? []);
+      } else {
       // New game — apply name and difficulty from setup
       const base = JSON.parse(JSON.stringify(INITIAL_PLAYER));
       if (newGameOpts?.name) base.name = newGameOpts.name;
@@ -153,8 +154,8 @@ export function useGameState() {
       setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
       setDifficulty(newGameOpts?.difficulty ?? 'normal');
       setVisitedLocations(['village']);
-      setLog(data.log ?? []);
-      setBattleLog(data.battleLog ?? []);
+      setLog([]);
+      setBattleLog([]);
       setBattleState(null);
       setScreen('explore');
       }, []);
