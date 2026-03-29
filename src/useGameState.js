@@ -74,7 +74,7 @@ export function useGameState() {
   // Battle flags reset each fight
   const battleFlagsRef = useRef({ damageTaken: 0, usedDefend: false, usedFlee: false });
   // Battle-only log — reset each fight, used for full log view
-  const battleLog = useState([]);
+  const [battleLog, setBattleLog] = useState([]);
 
   // Track latest values for auto-save without stale closure issues
   const saveRef = useRef({ player, quests, log, screen, activeSlot });
@@ -96,12 +96,8 @@ export function useGameState() {
   }, [player, quests, screen, activeSlot, difficulty, pendingLevelUp, visitedLocations]);
 
   const addLog = useCallback((msg, type = 'normal') => {
-  // Block heal logs from adventure log
-  if (type !== 'heal') {
     setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
-  }
-  // Still show in battle log
-  setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
+    setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
   }, []);
 
   const notify = useCallback((msg, type = 'info') => {
@@ -324,9 +320,8 @@ export function useGameState() {
       lastDmg: null,
     });
     setScreen('battle');
-    setTimeout(() => {
     addLog(`⚔️ A ${enemy.name} appears!`, 'danger');
-    }, 0);
+  }, [addLog, difficulty]);
 
   const playerAttack = useCallback(() => {
     if (!battleState || battleState.turn !== 'player') return;
