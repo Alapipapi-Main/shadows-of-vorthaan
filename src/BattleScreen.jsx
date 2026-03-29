@@ -21,7 +21,7 @@ function FloatingNumber({ value, isCrit, target, dodged, id }) {
 }
 
 export default function BattleScreen({
-  player, battleState, onAttack, onDefend, onFlee, onEnemyTurn, onResolveVictory, onUseItem, log,
+  player, battleState, onAttack, onDefend, onFlee, onEnemyTurn, onResolveVictory, onUseItem, log, battleLog,
 }) {
   const [floats, setFloats] = useState([]);
   const [enemyShake, setEnemyShake] = useState(false);
@@ -186,7 +186,7 @@ export default function BattleScreen({
           </button>
         </div>
         <div className={`${styles.logEntries} ${showFullLog ? styles.logExpanded : ''}`}>
-          {(showFullLog ? [...log].reverse() : [...log].slice(-6).reverse()).map(entry => (
+          {(showFullLog ? [...(battleLog || [])].reverse() : [...log].slice(-6).reverse()).map(entry => (
             <div key={entry.id} className={`${styles.logEntry} ${styles[entry.type] || ''}`}>
               {entry.msg}
             </div>

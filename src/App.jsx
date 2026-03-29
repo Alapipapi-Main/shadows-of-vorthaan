@@ -20,7 +20,7 @@ import './App.css';
 
 export default function App() {
   const {
-    player, screen, setScreen, battleState, setBattleState, log, notification, quests, activeSlot, difficulty,
+    player, screen, setScreen, battleState, setBattleState, log, battleLog, notification, quests, activeSlot, difficulty,
     pendingLevelUp, pickPerk,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
     resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog, notify,
@@ -268,6 +268,7 @@ export default function App() {
             onResolveVictory={handleResolveVictory}
             onUseItem={handleUseItem}
             log={log}
+            battleLog={battleLog}
           />
         )}
       </main>

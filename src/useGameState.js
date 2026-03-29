@@ -73,6 +73,8 @@ export function useGameState() {
   const [totalCrafted,     setTotalCrafted]     = useState(0);
   // Battle flags reset each fight
   const battleFlagsRef = useRef({ damageTaken: 0, usedDefend: false, usedFlee: false });
+  // Battle-only log — reset each fight, used for full log view
+  const [battleLog, setBattleLog] = useState([]);
 
   // Track latest values for auto-save without stale closure issues
   const saveRef = useRef({ player, quests, log, screen, activeSlot });
@@ -95,6 +97,7 @@ export function useGameState() {
 
   const addLog = useCallback((msg, type = 'normal') => {
     setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
+    setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
   }, []);
 
   const notify = useCallback((msg, type = 'info') => {
@@ -305,6 +308,7 @@ export function useGameState() {
       xp:    Math.round(base.xp    * diff.xpMult),
     };
     battleFlagsRef.current = { damageTaken: 0, usedDefend: false, usedFlee: false };
+    setBattleLog([]);
     recordBestiaryEncounter(enemyId);
     setBattleState({
       enemy,
@@ -731,7 +735,7 @@ export function useGameState() {
   }, []);
 
   return {
-    player, screen, setScreen, battleState, setBattleState, log, notification, quests, activeSlot, difficulty,
+    player, screen, setScreen, battleState, setBattleState, log, battleLog, notification, quests, activeSlot, difficulty,
     pendingLevelUp, pickPerk,
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
     resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog, notify,
