@@ -96,14 +96,19 @@ export function useGameState() {
   }, [player, quests, screen, activeSlot, difficulty, pendingLevelUp, visitedLocations]);
 
   const addLog = useCallback((msg, type = 'normal') => {
-  // Only add to the main adventure log if it's NOT a heal type
-  if (type !== 'heal') {
+  // Define which messages belong in which log
+  const isAdventureType = ['travel', 'rest', 'shop', 'levelup', 'victory', 'normal'].includes(type);
+  const isBattleType = ['danger', 'player', 'crit', 'buff', 'heal', 'enemy_defend', 'resolved'].includes(type);
+  // 1. Update Adventure Log (Primary game history)
+  if (isAdventureType) {
     setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
   }
-  // Always add everything to the battle log
-  setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
+  // 2. Update Battle Log (Combat-only history)
+  if (isBattleType) {
+    setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
+  }
   }, []);
-
+  
   const notify = useCallback((msg, type = 'info') => {
     setNotification({ msg, type });
     setTimeout(() => setNotification(null), 2500);
@@ -149,11 +154,11 @@ export function useGameState() {
       setQuests(JSON.parse(JSON.stringify(INITIAL_QUESTS)));
       setDifficulty(newGameOpts?.difficulty ?? 'normal');
       setVisitedLocations(['village']);
-      setLog([]);
-    }
-    setBattleState(null);
-    setScreen('explore');
-  }, []);
+      setLog(data.log ?? []);
+      setBattleLog(data.battleLog ?? []);
+      setBattleState(null);
+      setScreen('explore');
+      }, []);
 
   const eraseSlot = useCallback((slot) => {
     deleteSlot(slot);
@@ -166,6 +171,7 @@ export function useGameState() {
       setPendingLevelUp(false);
       setVisitedLocations([]);
       setLog([]);
+      setBattleLog([]);
       setBattleState(null);
       setScreen('title');
     }
@@ -183,6 +189,7 @@ export function useGameState() {
     setVisitedLocations([]);
     setBattleState(null);
     setLog([]);
+    setBattleLog([]);
     setScreen('title');
   }, [activeSlot]);
 
@@ -700,9 +707,10 @@ export function useGameState() {
   }, [player.gold, notify, addLog]);
 
   const rest = useCallback(() => {
-    setPlayer(p => ({ ...p, hp: p.maxHp }));
-    addLog('🌙 You rest and recover all HP.', 'heal');
-    notify('Fully rested!', 'success');
+  setPlayer(p => ({ ...p, hp: p.maxHp }));
+  // Change 'heal' to 'rest' so it bypasses the adventure log filter
+  addLog('🌙 You rest and recover all HP.', 'rest'); 
+  notify('Fully rested!', 'success');
   }, [addLog, notify]);
 
   const craftItem = useCallback((recipe) => {
