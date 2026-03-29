@@ -130,11 +130,14 @@ export default function ExploreScreen({ player, quests, onTravel, onStartBattle,
           <h3 className={styles.sectionTitle}>Adventure Log</h3>
           <div className={styles.log}>
             {log.length === 0 && <div className={styles.logEmpty}>Your adventure begins…</div>}
-            {[...log].reverse().map(entry => (
-              <div key={entry.id} className={`${styles.logEntry} ${styles[entry.type] || ''}`}>
-                {entry.msg}
-              </div>
-            ))}
+            {[...log]
+              .filter(e => !['danger', 'player', 'crit', 'buff'].includes(e.type))
+              .reverse()
+              .map(entry => (
+                <div key={entry.id} className={`${styles.logEntry} ${styles[entry.type] || ''}`}>
+                  {entry.msg}
+                </div>
+              ))}
           </div>
 
           <div className={styles.playerStats}>
