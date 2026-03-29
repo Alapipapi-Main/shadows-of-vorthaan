@@ -146,7 +146,7 @@ export function useGameState() {
       setVisitedLocations(data.visitedLocations ?? [player.location]);
       setLog(data.log ?? []);
       setBattleLog(data.battleLog ?? []);
-      } else {
+    } else {
       // New game — apply name and difficulty from setup
       const base = JSON.parse(JSON.stringify(INITIAL_PLAYER));
       if (newGameOpts?.name) base.name = newGameOpts.name;
@@ -158,6 +158,7 @@ export function useGameState() {
       setBattleLog([]);
       setBattleState(null);
       setScreen('explore');
+    }
       }, []);
 
   const eraseSlot = useCallback((slot) => {
