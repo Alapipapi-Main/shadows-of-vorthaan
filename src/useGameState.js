@@ -96,17 +96,16 @@ export function useGameState() {
   }, [player, quests, screen, activeSlot, difficulty, pendingLevelUp, visitedLocations]);
 
   const addLog = useCallback((msg, type = 'normal') => {
-  // Define which messages belong in which log
-  const isAdventureType = ['travel', 'rest', 'shop', 'levelup', 'victory', 'normal'].includes(type);
-  const isBattleType = ['danger', 'player', 'crit', 'buff', 'heal', 'enemy_defend', 'resolved'].includes(type);
-  // 1. Update Adventure Log (Primary game history)
-  if (isAdventureType) {
-    setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
-  }
-  // 2. Update Battle Log (Combat-only history)
-  if (isBattleType) {
-    setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
-  }
+    const isAdventureType = ['travel', 'rest', 'shop', 'levelup', 'victory', 'normal'].includes(type);
+    const isBattleType = ['danger', 'player', 'crit', 'buff', 'heal', 'enemy_defend', 'resolved'].includes(type);
+
+    if (isAdventureType) {
+      setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
+    }
+    if (isBattleType) {
+      // Keep state capped at 100 to prevent performance lag
+      setBattleLog(prev => [...prev.slice(-100), { msg, type, id: Date.now() + Math.random() + 0.5 }]);
+    }
   }, []);
   
   const notify = useCallback((msg, type = 'info') => {
