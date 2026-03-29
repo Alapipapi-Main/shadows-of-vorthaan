@@ -324,8 +324,9 @@ export function useGameState() {
       lastDmg: null,
     });
     setScreen('battle');
+    setTimeout(() => {
     addLog(`⚔️ A ${enemy.name} appears!`, 'danger');
-  }, [addLog, difficulty]);
+    }, 0);
 
   const playerAttack = useCallback(() => {
     if (!battleState || battleState.turn !== 'player') return;
