@@ -660,6 +660,14 @@ export function useGameState() {
     }));
   }, [battleState, player, addLog]);
 
+  // Called to synchronously stop battle-mode logging and clear battle state.
+  // Use this from UI code before adding a non-battle log (like 'fled' or 'victory')
+  // so those entries don't get captured in battleLog due to a timing window.
+  const endBattleCleanup = useCallback(() => {
+    inBattleRef.current = false;
+    setBattleState(null);
+  }, []);
+
   const resolveVictory = useCallback(() => {
     if (!battleState) return;
     const { enemy } = battleState;
@@ -758,5 +766,7 @@ export function useGameState() {
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
     // achievement tracking
     visitedLocations, totalPoisons, totalBurns, totalCrafted, battleFlagsRef,
+    // new helper
+    endBattleCleanup,
   };
 }
