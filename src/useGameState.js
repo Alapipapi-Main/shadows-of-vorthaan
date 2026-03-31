@@ -143,7 +143,9 @@ export function useGameState() {
       setDifficulty(data.difficulty ?? 'normal');
       setPendingLevelUp(data.pendingSkillPick ?? false);
       setVisitedLocations(data.visitedLocations ?? [player.location]);
-      setLog(data.log ?? []);
+      if (Array.isArray(data.log) && data.log.length > 0) {
+      setLog(data.log);
+      }
       setBattleLog(data.battleLog ?? []);
     } else {
       // New game — apply name and difficulty from setup
