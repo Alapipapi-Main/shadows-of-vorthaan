@@ -157,6 +157,7 @@ export function useGameState() {
       setBattleLog([]);
     }
     setBattleState(null);
+    inBattleRef.current = false;
     setScreen('explore');
   }, []);
 
@@ -173,6 +174,7 @@ export function useGameState() {
       setLog([]);
       setBattleLog([]);
       setBattleState(null);
+      inBattleRef.current = false;
       setScreen('title');
     }
   }, [activeSlot]);
@@ -188,6 +190,7 @@ export function useGameState() {
     setPendingLevelUp(false);
     setVisitedLocations([]);
     setBattleState(null);
+    inBattleRef.current = false;
     setLog([]);
     setBattleLog([]);
     setScreen('title');
@@ -683,6 +686,7 @@ export function useGameState() {
       return applyXp(withRewards, enemy.xp);
     });
     setBattleState(null);
+    inBattleRef.current = false;
     if (enemy.id === 'shadow_king') {
       // Mark slot as pending deletion in case player refreshes on victory screen
       try { localStorage.setItem(PENDING_VICTORY_KEY, String(activeSlot)); } catch {}
@@ -742,6 +746,7 @@ export function useGameState() {
   const goToTitle = useCallback(() => {
     setActiveSlot(null);
     setBattleState(null);
+    inBattleRef.current = false;
     setScreen('title');
   }, []);
 
