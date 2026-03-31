@@ -25,7 +25,7 @@ export default function App() {
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
     resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog, notify,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
-    visitedLocations, totalPoisons, totalBurns, totalCrafted, battleFlagsRef,
+    visitedLocations, totalPoisons, totalBurns, totalCrafted, battleFlagsRef, endBattleCleanup,
   } = useGameState();
 
   const { musicVol, sfxVol, setMusicVol, setSfxVol, playMusic, playSfx } = useAudio();
@@ -98,9 +98,9 @@ export default function App() {
     const success = player.alwaysFlee || Math.random() > 0.4;
     if (success) {
       playSfx('flee');
+      endBattleCleanup();
       addLog('💨 You fled from battle!', 'travel');
       battleFlagsRef.current.usedFlee = true;
-      setBattleState(null);
       setScreen('explore');
     } else {
       playSfx('hit');
@@ -139,6 +139,7 @@ export default function App() {
         checkVictory(player, difficulty);
       }
     }
+    endBattleCleanup();
     resolveVictory();
   };
 
