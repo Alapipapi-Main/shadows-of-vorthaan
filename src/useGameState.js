@@ -91,9 +91,10 @@ export function useGameState() {
       pendingSkillPick: pendingLevelUp,
       visitedLocations,
       log: log.slice(-20),
+      battleLog: battleLog.slice(-60),
       savedAt: new Date().toISOString(),
     });
-  }, [player, quests, screen, activeSlot, difficulty, pendingLevelUp, visitedLocations]);
+  }, [player, quests, screen, activeSlot, difficulty, pendingLevelUp, visitedLocations, battleLog]);
 
   const addLog = useCallback((msg, type = 'normal') => {
     setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
@@ -137,6 +138,7 @@ export function useGameState() {
       setPendingLevelUp(data.pendingSkillPick ?? false);
       setVisitedLocations(data.visitedLocations ?? [player.location]);
       setLog(data.log ?? []);
+      setBattleLog(data.battleLog ?? []);
     } else {
       // New game — apply name and difficulty from setup
       const base = JSON.parse(JSON.stringify(INITIAL_PLAYER));
@@ -146,6 +148,7 @@ export function useGameState() {
       setDifficulty(newGameOpts?.difficulty ?? 'normal');
       setVisitedLocations(['village']);
       setLog([]);
+      setBattleLog([]);
     }
     setBattleState(null);
     setScreen('explore');
@@ -162,6 +165,7 @@ export function useGameState() {
       setPendingLevelUp(false);
       setVisitedLocations([]);
       setLog([]);
+      setBattleLog([]);
       setBattleState(null);
       setScreen('title');
     }
@@ -179,6 +183,7 @@ export function useGameState() {
     setVisitedLocations([]);
     setBattleState(null);
     setLog([]);
+    setBattleLog([]);
     setScreen('title');
   }, [activeSlot]);
 
@@ -308,7 +313,6 @@ export function useGameState() {
       xp:    Math.round(base.xp    * diff.xpMult),
     };
     battleFlagsRef.current = { damageTaken: 0, usedDefend: false, usedFlee: false };
-    setBattleLog([]);
     recordBestiaryEncounter(enemyId);
     setBattleState({
       enemy,
@@ -698,7 +702,7 @@ export function useGameState() {
 
   const rest = useCallback(() => {
     setPlayer(p => ({ ...p, hp: p.maxHp }));
-    addLog('🌙 You rest and recover all HP.', 'heal');
+    addLog('🌙 You rest and recover all HP.', 'normal');
     notify('Fully rested!', 'success');
   }, [addLog, notify]);
 

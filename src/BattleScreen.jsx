@@ -188,7 +188,7 @@ export default function BattleScreen({
         <div className={`${styles.logEntries} ${showFullLog ? styles.logExpanded : ''}`}>
           {(showFullLog
             ? [...(battleLog || [])].reverse()
-            : [...(battleLog || [])].filter(e => ['danger','player','crit','buff','heal','victory'].includes(e.type)).slice(-6).reverse()
+            : [...(battleLog || [])].filter(e => ['danger','player','crit','buff','heal'].includes(e.type)).slice(-6).reverse()
           ).map(entry => (
             <div key={entry.id} className={`${styles.logEntry} ${styles[entry.type] || ''}`}>
               {entry.msg}
