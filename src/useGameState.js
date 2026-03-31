@@ -65,6 +65,7 @@ export function useGameState() {
   const [quests, setQuests]         = useState(() => JSON.parse(JSON.stringify(INITIAL_QUESTS)));
   const [difficulty, setDifficulty] = useState('normal');
   const [pendingLevelUp, setPendingLevelUp] = useState(false);
+  const saveRef = useRef(null);
 
   // Achievement tracking — persisted across runs in separate localStorage key
   const [visitedLocations, setVisitedLocations] = useState([]);
