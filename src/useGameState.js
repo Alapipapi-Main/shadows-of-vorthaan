@@ -73,11 +73,14 @@ export function useGameState() {
   const [totalCrafted,     setTotalCrafted]     = useState(0);
   // Battle flags reset each fight
   const battleFlagsRef = useRef({ damageTaken: 0, usedDefend: false, usedFlee: false });
-  // Battle-only log — reset each fight, used for full log view
+  const inBattleRef   = useRef(false); // true only while screen === 'battle'
+  // Battle-only log — persists across battles, only collects during active combat
   const [battleLog, setBattleLog] = useState([]);
 
-  // Track latest values for auto-save without stale closure issues
-  const saveRef = useRef({ player, quests, log, screen, activeSlot });
+  // Keep inBattleRef in sync with screen so addLog gates correctly
+  useEffect(() => {
+    inBattleRef.current = screen === 'battle';
+  }, [screen]);
   useEffect(() => { saveRef.current = { player, quests, log, screen, activeSlot }; });
 
   // Auto-save whenever gameplay state changes
@@ -98,7 +101,9 @@ export function useGameState() {
 
   const addLog = useCallback((msg, type = 'normal') => {
     setLog(prev => [...prev.slice(-40), { msg, type, id: Date.now() + Math.random() }]);
-    setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
+    if (inBattleRef.current) {
+      setBattleLog(prev => [...prev, { msg, type, id: Date.now() + Math.random() + 0.5 }]);
+    }
   }, []);
 
   const notify = useCallback((msg, type = 'info') => {
@@ -313,6 +318,7 @@ export function useGameState() {
       xp:    Math.round(base.xp    * diff.xpMult),
     };
     battleFlagsRef.current = { damageTaken: 0, usedDefend: false, usedFlee: false };
+    inBattleRef.current = true;
     recordBestiaryEncounter(enemyId);
     setBattleState({
       enemy,
