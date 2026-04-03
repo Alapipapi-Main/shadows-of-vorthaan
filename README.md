@@ -17,6 +17,7 @@ A dark fantasy action/adventure browser RPG built with **React + Vite**. No exte
 - **Flee** from battles (60% success rate, 100% with Shadowstep perk)
 - **Complete quests** from the Tavern notice board for bonus gold and XP
 - **World Map** — animated SVG map showing all 7 locations with fog of war, travel by clicking reachable nodes
+- **Full battle log** — expand the battle log during combat to see the complete history of the fight
 - **Bestiary** — discover all 13 enemy types, track kill counts and first encounter dates
 
 ## 🌳 Skill Tree
@@ -110,7 +111,7 @@ Materials drop during exploration: **Leather Scrap** from the Forest Edge, **Glo
 
 ## 📜 Quest System
 
-18 quests available from the Tavern quest board:
+20 quests available from the Tavern quest board:
 
 | Quest | Goal | Reward |
 |-------|------|--------|
@@ -119,6 +120,8 @@ Materials drop during exploration: **Leather Scrap** from the Forest Edge, **Glo
 | Wolf Hunter | Slay 3 Dire Wolves | 60g + 90 XP |
 | Into the Dark | Visit the Dark Wood | 50g + 80 XP |
 | Orc Bane | Slay 3 Orcs | 120g + 200 XP |
+| Shadow Hunter | Slay 5 Shadow Wolves | 110g + 180 XP |
+| Wraith Banisher | Banish 3 Forest Wraiths | 130g + 220 XP |
 | Shrine Seeker | Visit the Ruined Shrine | 70g + 110 XP |
 | Bone Breaker | Slay 3 Skeleton Warriors | 140g + 240 XP |
 | Shade Hunter | Banish 3 Cursed Shades | 150g + 260 XP |
