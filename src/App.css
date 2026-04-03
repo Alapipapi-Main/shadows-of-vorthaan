@@ -15,7 +15,7 @@
   top: 70px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 300;
+  z-index: 1000;
   padding: 10px 24px;
   border-radius: 8px;
   font-family: 'Cinzel', serif;
