@@ -67,11 +67,6 @@ export default function BattleScreen({
       const t = setTimeout(onEnemyTurn, 900);
       return () => clearTimeout(t);
     }
-    if (battleState.turn === 'player_stunned') {
-      // Auto-skip stunned turn after showing message
-      const t = setTimeout(onEnemyTurn, 1200);
-      return () => clearTimeout(t);
-    }
     if (battleState.turn === 'resolved') {
       const t = setTimeout(onResolveVictory, 700);
       return () => clearTimeout(t);
@@ -84,7 +79,7 @@ export default function BattleScreen({
   const enemyHpPct  = (enemy.hp / enemy.maxHp) * 100;
   const playerHpPct = (player.hp / player.maxHp) * 100;
   const isPlayerTurn = battleState.turn === 'player';
-  const isStunned    = battleState.turn === 'player_stunned';
+  const isStunned    = (player.statusEffects || []).some(s => s.id === 'stun');
   const maxBattleItems = player.inventory.some(i => i.id === 'leather_pouch') ? 5 : 3;
   const battleItems = player.inventory
     .filter(i => i.type === 'consumable')

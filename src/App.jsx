@@ -161,19 +161,43 @@ export default function App() {
   useEffect(() => {
     if (battleState?.lastDmg?.dodged) playSfx('dodge');
   }, [battleState?.lastDmg?.id]);
+
+  // Enemy status effect sounds
   const prevEnemyStatus = useRef([]);
   useEffect(() => {
     const current = battleState?.enemyStatus || [];
-    const prev    = prevEnemyStatus.current;
+    const prev = prevEnemyStatus.current;
     current.forEach(s => {
       if (!prev.find(p => p.id === s.id)) {
         if (s.id === 'poison') playSfx('poison');
         if (s.id === 'burn')   playSfx('burn');
       }
     });
-    if (battleState?.turn === 'player_stunned') playSfx('stun');
-    prevEnemyStatus.current = current;
-  }, [battleState?.enemyStatus, battleState?.turn]);
+    prevEnemyStatus.current = [...current];
+  }, [battleState?.enemyStatus, playSfx]);
+
+  // Player stun sounds
+  const prevPlayerStatus = useRef([]);
+  useEffect(() => {
+    const current = player.statusEffects || [];
+    const prev = prevPlayerStatus.current;
+    current.forEach(s => {
+      if (!prev.find(p => p.id === s.id)) {
+        if (s.id === 'stun') playSfx('stun');
+      }
+    });
+    prevPlayerStatus.current = [...current];
+  }, [player.statusEffects, playSfx]);
+
+  // Sound events from battle actions
+  useEffect(() => {
+    const soundEvents = battleState?.soundEvents || [];
+    soundEvents.forEach(sound => playSfx(sound));
+    // Clear sound events after playing
+    if (soundEvents.length > 0) {
+      setBattleState(prev => prev ? { ...prev, soundEvents: [] } : prev);
+    }
+  }, [battleState?.soundEvents, playSfx, setBattleState]);
 
   // ── Screens ────────────────────────────────────────────────────────────────
   if (screen === 'title') return (

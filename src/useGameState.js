@@ -334,6 +334,7 @@ export function useGameState() {
       bossPatternIdx: 0,
       bossPhase: 1,
       lastDmg: null,
+      soundEvents: [],
     });
     setScreen('battle');
     addLog(`⚔️ A ${enemy.name} appears!`, 'danger');
@@ -341,6 +342,26 @@ export function useGameState() {
 
   const playerAttack = useCallback(() => {
     if (!battleState || battleState.turn !== 'player') return;
+
+    // Check if player is stunned — skip turn if so
+    const stun = (player.statusEffects || []).find(s => s.id === 'stun');
+    if (stun) {
+      addLog(`💫 You are stunned and cannot act this turn!`, 'danger');
+      // Remove stun (duration was 1, now it's used up)
+      setPlayer(p => ({
+        ...p,
+        statusEffects: (p.statusEffects || []).filter(s => s.id !== 'stun'),
+      }));
+      setBattleState(prev => ({
+        ...prev,
+        turn: 'enemy',
+        defendBonus: 0,
+        round: (prev.round || 1) + 1,
+        lastDmg: null,
+      }));
+      return;
+    }
+
     const defPen = (player.defPen || 0) + (battleState.buffs?.defPen || 0);
     const atk = player.atk + player.weapon.atk + battleState.buffs.atk;
     const enemyDef = Math.max(0, battleState.enemy.def - defPen);
@@ -354,7 +375,7 @@ export function useGameState() {
     const enemyDodge = ENEMY_DODGE_CHANCE[battleState.enemy.id] ?? 0;
     if (enemyDodge > 0 && Math.random() < enemyDodge) {
       addLog(`👻 ${battleState.enemy.name} phases through your attack — Miss!`, 'danger');
-      setBattleState(prev => ({ ...prev, turn: 'enemy', lastDmg: { value: 0, isCrit: false, target: 'enemy', id: Date.now(), dodged: true } }));
+      setBattleState(prev => ({ ...prev, turn: 'enemy', lastDmg: { value: 0, isCrit: false, target: 'enemy', id: Date.now(), dodged: true }, soundEvents: ['dodge'] }));
       return;
     }
 
@@ -373,17 +394,21 @@ export function useGameState() {
     setBattleState(prev => {
       const newHp = Math.max(0, prev.enemy.hp - finalDmg);
       let newEnemyStatus = [...(prev.enemyStatus || [])];
+      let soundEvents = [];
       if (applyPoison && !newEnemyStatus.find(s => s.id === 'poison')) {
         newEnemyStatus.push({ id: 'poison', turnsLeft: STATUS_EFFECTS.poison.duration });
+        soundEvents.push('poison');
       }
       if (applyBurn && !newEnemyStatus.find(s => s.id === 'burn')) {
         newEnemyStatus.push({ id: 'burn', turnsLeft: STATUS_EFFECTS.burn.duration });
+        soundEvents.push('burn');
       }
       const next = {
         ...prev,
         enemy: { ...prev.enemy, hp: newHp },
         enemyStatus: newEnemyStatus,
         lastDmg: { value: finalDmg, isCrit, target: 'enemy', id: Date.now() },
+        soundEvents,
       };
       return newHp <= 0 ? { ...next, turn: 'resolved' } : { ...next, turn: 'enemy' };
     });
@@ -391,10 +416,30 @@ export function useGameState() {
 
   const playerDefend = useCallback(() => {
     if (!battleState || battleState.turn !== 'player') return;
+
+    // Check if player is stunned — skip turn if so
+    const stun = (player.statusEffects || []).find(s => s.id === 'stun');
+    if (stun) {
+      addLog(`💫 You are stunned and cannot act this turn!`, 'danger');
+      // Remove stun (duration was 1, now it's used up)
+      setPlayer(p => ({
+        ...p,
+        statusEffects: (p.statusEffects || []).filter(s => s.id !== 'stun'),
+      }));
+      setBattleState(prev => ({
+        ...prev,
+        turn: 'enemy',
+        defendBonus: 0,
+        round: (prev.round || 1) + 1,
+        lastDmg: null,
+      }));
+      return;
+    }
+
     battleFlagsRef.current.usedDefend = true;
     addLog('🛡️ You take a defensive stance, reducing incoming damage.', 'player');
-    setBattleState(prev => ({ ...prev, turn: 'enemy_defend', defendBonus: 10, lastDmg: null }));
-  }, [battleState, addLog]);
+    setBattleState(prev => ({ ...prev, turn: 'enemy_defend', defendBonus: 10, lastDmg: null, soundEvents: [] }));
+  }, [battleState, player, addLog]);
 
   const useItem = useCallback((item, inBattle = false) => {
     // Remove item from inventory and apply player-level effects
@@ -438,7 +483,7 @@ export function useGameState() {
 
     // Battle-only effects
     if (item.effect === 'buff') {
-      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, atk: prev.buffs.atk + item.value }, turn: 'enemy' } : prev);
+      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, atk: prev.buffs.atk + item.value }, turn: 'enemy', soundEvents: [] } : prev);
       addLog(`✨ You use ${item.name}! ATK +${item.value} for this battle.`, 'buff');
       return;
     }
@@ -446,11 +491,11 @@ export function useGameState() {
       setBattleState(prev => {
         if (!prev) return prev;
         const already = (prev.enemyStatus || []).find(s => s.id === 'poison');
-        if (already) { addLog(`🐍 Enemy is already poisoned!`, 'player'); return { ...prev, turn: 'enemy' }; }
+        if (already) { addLog(`🐍 Enemy is already poisoned!`, 'player'); return { ...prev, turn: 'enemy', soundEvents: [] }; }
         addLog(`🐍 You use ${item.name} — enemy is poisoned!`, 'player');
         advanceQuests('inflict_status', 'poison');
         setTotalPoisons(p => p + 1);
-        return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'poison', turnsLeft: 3 }], turn: 'enemy' };
+        return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'poison', turnsLeft: 3 }], turn: 'enemy', soundEvents: ['poison'] };
       });
       return;
     }
@@ -458,16 +503,16 @@ export function useGameState() {
       setBattleState(prev => {
         if (!prev) return prev;
         const already = (prev.enemyStatus || []).find(s => s.id === 'burn');
-        if (already) { addLog(`🔥 Enemy is already burning!`, 'player'); return { ...prev, turn: 'enemy' }; }
+        if (already) { addLog(`🔥 Enemy is already burning!`, 'player'); return { ...prev, turn: 'enemy', soundEvents: [] }; }
         addLog(`🔥 You use ${item.name} — enemy is burning!`, 'player');
         advanceQuests('inflict_status', 'burn');
         setTotalBurns(p => p + 1);
-        return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'burn', turnsLeft: 2 }], turn: 'enemy' };
+        return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'burn', turnsLeft: 2 }], turn: 'enemy', soundEvents: ['burn'] };
       });
       return;
     }
     if (item.effect === 'reinforced_wrap') {
-      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, def: (prev.buffs?.def || 0) + item.value }, turn: 'enemy' } : prev);
+      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, def: (prev.buffs?.def || 0) + item.value }, turn: 'enemy', soundEvents: [] } : prev);
       addLog(`🪢 You use ${item.name}! +${item.value} DEF for this battle.`, 'buff');
       return;
     }
@@ -479,7 +524,7 @@ export function useGameState() {
         addLog(`☠️ You hurl the ${item.name} — enemy is poisoned for ${item.value} turns!`, 'player');
         advanceQuests('inflict_status', 'poison');
         setTotalPoisons(p => p + 1);
-        return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'poison', turnsLeft: item.value }], turn: 'enemy' };
+        return { ...prev, enemyStatus: [...(prev.enemyStatus || []), { id: 'poison', turnsLeft: item.value }], turn: 'enemy', soundEvents: [] };
       });
       return;
     }
@@ -487,20 +532,20 @@ export function useGameState() {
       const alreadyActive = (battleState?.buffs?.dodgeChance ?? 0) > 0;
       if (alreadyActive) {
         addLog(`🪬 Evasion Tonic is already active!`, 'buff');
-        setBattleState(prev => prev ? { ...prev, turn: 'enemy' } : prev);
+        setBattleState(prev => prev ? { ...prev, turn: 'enemy', soundEvents: [] } : prev);
       } else {
-        setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, dodgeChance: 0.30 }, turn: 'enemy' } : prev);
+        setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, dodgeChance: 0.30 }, turn: 'enemy', soundEvents: [] } : prev);
         addLog(`🪬 You use ${item.name}! 30% dodge chance for this battle.`, 'buff');
       }
       return;
     }
     if (item.effect === 'piercing_oil') {
-      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, defPen: (prev.buffs?.defPen || 0) + item.value }, turn: 'enemy' } : prev);
+      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, defPen: (prev.buffs?.defPen || 0) + item.value }, turn: 'enemy', soundEvents: [] } : prev);
       addLog(`🗡️ You use ${item.name}! +${item.value} DEF penetration for this battle.`, 'buff');
       return;
     }
     // heal/cure in battle — advance turn
-    setBattleState(prev => prev ? { ...prev, turn: 'enemy' } : prev);
+    setBattleState(prev => prev ? { ...prev, turn: 'enemy', soundEvents: [] } : prev);
   }, [addLog, advanceQuests, battleState]);
 
   const enemyAttack = useCallback(() => {
@@ -528,10 +573,11 @@ export function useGameState() {
           enemy: { ...prev.enemy, hp: 0 },
           enemyStatus: newEnemyStatus,
           turn: 'resolved',
+          soundEvents: [],
         }));
         return;
       }
-      setBattleState(prev => ({ ...prev, enemy: { ...prev.enemy, hp: newHp }, enemyStatus: newEnemyStatus }));
+      setBattleState(prev => ({ ...prev, enemy: { ...prev.enemy, hp: newHp }, enemyStatus: newEnemyStatus, soundEvents: [] }));
     }
 
     // ── Player dodge check — applies to ALL attacks including boss ────────────
@@ -539,7 +585,7 @@ export function useGameState() {
     if (playerDodge > 0 && Math.random() < playerDodge) {
       addLog(`🪬 You dodge ${enemy.name}'s attack!`, 'player');
       setBattleState(prev => ({
-        ...prev, turn: 'player', defendBonus: 0, round: (prev.round || 1) + 1, lastDmg: null,
+        ...prev, turn: 'player', defendBonus: 0, round: (prev.round || 1) + 1, lastDmg: { value: 0, isCrit: false, target: 'player', id: Date.now(), dodged: true }, soundEvents: ['dodge'],
       }));
       return;
     }
@@ -570,6 +616,7 @@ export function useGameState() {
           bossPatternIdx: patIdx + 1,
           bossPhase: phase === 'phase2' ? 2 : prev.bossPhase,
           lastDmg: null,
+          soundEvents: [],
         }));
         return;
       }
@@ -596,6 +643,7 @@ export function useGameState() {
         bossPhase: phase === 'phase2' ? 2 : prev.bossPhase,
         buffs: { ...prev.buffs, def: newBufDef },
         lastDmg: { value: rawDmg, isCrit: attackId === 'charge', target: 'player', id: Date.now() },
+        soundEvents: [],
       }));
       return;
     }
@@ -612,13 +660,17 @@ export function useGameState() {
       if (!existing) inflictStatus = statusChanceDef.effect;
     }
 
-    // Handle stun — skip player turn instead of dealing damage
+    // Handle stun — add to status effects to skip next turn
     if (inflictStatus === 'stun') {
       addLog(`${enemy.icon} ${enemy.name} stuns you! 💫 You will lose your next turn!`, 'danger');
-      setPlayer(p => ({ ...p, hp: Math.max(0, p.hp - dmg) }));
+      setPlayer(p => ({
+        ...p,
+        hp: Math.max(0, p.hp - dmg),
+        statusEffects: [...(p.statusEffects || []), { id: 'stun', turnsLeft: STATUS_EFFECTS.stun.duration }],
+      }));
       setBattleState(prev => ({
         ...prev,
-        turn: 'player_stunned', // BattleScreen will auto-skip this turn
+        turn: 'player',
         defendBonus: 0,
         round: (prev.round || 1) + 1,
         lastDmg: { value: dmg, isCrit: false, target: 'player', id: Date.now() },
@@ -659,6 +711,7 @@ export function useGameState() {
       defendBonus: 0,
       round: (prev.round || 1) + 1,
       lastDmg: { value: totalDmg, isCrit: false, target: 'player', id: Date.now() },
+      soundEvents: [],
     }));
   }, [battleState, player, addLog]);
 
