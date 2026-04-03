@@ -82,6 +82,48 @@ export const SOUNDS = {
     if (!ctx || !v) return;
     playTone(ctx, { freq: 660, type: 'sine', gain: v * 0.15, duration: 0.07 });
   },
+  dodge(ctx, v) {
+    if (!ctx || !v) return;
+    [600, 500, 400].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'sine', gain: v * 0.18, duration: 0.06, delay: i * 0.04 })
+    );
+  },
+  poison(ctx, v) {
+    if (!ctx || !v) return;
+    playTone(ctx, { freq: 180, type: 'sine',     gain: v * 0.22, duration: 0.18 });
+    playTone(ctx, { freq: 200, type: 'triangle', gain: v * 0.14, duration: 0.25, delay: 0.1 });
+    playTone(ctx, { freq: 160, type: 'sine',     gain: v * 0.10, duration: 0.30, delay: 0.2 });
+  },
+  burn(ctx, v) {
+    if (!ctx || !v) return;
+    playTone(ctx, { freq: 320, type: 'sawtooth', gain: v * 0.25, duration: 0.12 });
+    playTone(ctx, { freq: 480, type: 'sawtooth', gain: v * 0.15, duration: 0.18, delay: 0.08 });
+    playTone(ctx, { freq: 240, type: 'square',   gain: v * 0.10, duration: 0.22, delay: 0.15 });
+  },
+  stun(ctx, v) {
+    if (!ctx || !v) return;
+    playTone(ctx, { freq: 90, type: 'square',   gain: v * 0.35, duration: 0.25 });
+    playTone(ctx, { freq: 70, type: 'sawtooth', gain: v * 0.20, duration: 0.35, delay: 0.15 });
+  },
+  craft(ctx, v) {
+    if (!ctx || !v) return;
+    playTone(ctx, { freq: 280, type: 'square',   gain: v * 0.30, duration: 0.07 });
+    playTone(ctx, { freq: 350, type: 'sawtooth', gain: v * 0.20, duration: 0.08, delay: 0.08 });
+    playTone(ctx, { freq: 420, type: 'square',   gain: v * 0.15, duration: 0.07, delay: 0.16 });
+    playTone(ctx, { freq: 560, type: 'sine',     gain: v * 0.25, duration: 0.20, delay: 0.22 });
+  },
+  achievement(ctx, v) {
+    if (!ctx || !v) return;
+    [523, 659, 784, 1047, 1318].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'sine', gain: v * 0.28, duration: 0.25, delay: i * 0.07 })
+    );
+  },
+  mapOpen(ctx, v) {
+    if (!ctx || !v) return;
+    [330, 415, 523].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'triangle', gain: v * 0.18, duration: 0.18, delay: i * 0.08 })
+    );
+  },
 };
 
 // ── Music tracks ──────────────────────────────────────────────────────────────
@@ -137,6 +179,36 @@ const TRACKS = {
     notes: [392, 440, 392, 349, 392, 440, 523, 0, 440, 392, 349, 392, 329, 349, 392, 0],
     type: 'sine',
     baseGain: 0.08,
+  },
+  // Dark, dripping — Sunken Dungeon
+  dungeon: {
+    bpm: 68,
+    notes: [82, 0, 0, 87, 0, 82, 0, 0, 77, 0, 73, 0, 77, 0, 82, 0],
+    harmony: [41, 0, 0, 43, 0, 41, 0, 0, 38, 0, 36, 0, 38, 0, 41, 0],
+    type: 'square',
+    baseGain: 0.065,
+  },
+  // Eerie, ancient — Ruined Shrine
+  shrine: {
+    bpm: 58,
+    notes: [174, 0, 185, 0, 196, 0, 185, 174, 0, 164, 0, 174, 0, 0, 185, 0],
+    type: 'triangle',
+    baseGain: 0.075,
+  },
+  // Dark, crackling with dark magic — Ancient Ruins of Vor'thaan
+  ruins: {
+    bpm: 80,
+    notes: [69, 0, 73, 0, 69, 65, 0, 69, 0, 73, 77, 0, 73, 0, 69, 0],
+    harmony: [34, 0, 36, 0, 34, 32, 0, 34, 0, 36, 38, 0, 36, 0, 34, 0],
+    type: 'sawtooth',
+    baseGain: 0.07,
+  },
+  // Tense, rhythmic — forest edge & dark wood battles
+  forest_battle: {
+    bpm: 104,
+    notes: [196, 0, 196, 220, 0, 196, 0, 247, 196, 0, 174, 0, 196, 220, 196, 0],
+    type: 'square',
+    baseGain: 0.06,
   },
 };
 

@@ -11,7 +11,7 @@ const TOTAL_QUESTS  = 20;
 const TOTAL_PERKS   = 15;
 const TOTAL_LOCS    = 7;
 
-export default function useAchievements(notify) {
+export default function useAchievements(notify, playSfx) {
   const [unlocked, setUnlocked] = useState(() => readAchievements());
 
   const unlock = useCallback((id) => {
@@ -22,9 +22,10 @@ export default function useAchievements(notify) {
       const next = { ...prev, [id]: { unlockedAt: new Date().toISOString() } };
       writeAchievements(next);
       notify(`🏆 Achievement: ${ach.title}!`, 'levelup');
+      if (playSfx) playSfx('achievement');
       return next;
     });
-  }, [notify]);
+  }, [notify, playSfx]);
 
   // ── Check functions — called from game events ─────────────────────────────
 

@@ -17,7 +17,6 @@ A dark fantasy action/adventure browser RPG built with **React + Vite**. No exte
 - **Flee** from battles (60% success rate, 100% with Shadowstep perk)
 - **Complete quests** from the Tavern notice board for bonus gold and XP
 - **World Map** — animated SVG map showing all 7 locations with fog of war, travel by clicking reachable nodes
-- **Full battle log** — expand the battle log during combat to see the complete history of the fight
 - **Bestiary** — discover all 13 enemy types, track kill counts and first encounter dates
 
 ## 🌳 Skill Tree
@@ -111,7 +110,7 @@ Materials drop during exploration: **Leather Scrap** from the Forest Edge, **Glo
 
 ## 📜 Quest System
 
-20 quests available from the Tavern quest board:
+18 quests available from the Tavern quest board:
 
 | Quest | Goal | Reward |
 |-------|------|--------|
@@ -120,8 +119,6 @@ Materials drop during exploration: **Leather Scrap** from the Forest Edge, **Glo
 | Wolf Hunter | Slay 3 Dire Wolves | 60g + 90 XP |
 | Into the Dark | Visit the Dark Wood | 50g + 80 XP |
 | Orc Bane | Slay 3 Orcs | 120g + 200 XP |
-| Shadow Hunter | Slay 5 Shadow Wolves | 110g + 180 XP |
-| Wraith Banisher | Banish 3 Forest Wraiths | 130g + 220 XP |
 | Shrine Seeker | Visit the Ruined Shrine | 70g + 110 XP |
 | Bone Breaker | Slay 3 Skeleton Warriors | 140g + 240 XP |
 | Shade Hunter | Banish 3 Cursed Shades | 150g + 260 XP |
@@ -165,15 +162,23 @@ The Bestiary tab shows every enemy in the game. Undiscovered enemies appear as *
 
 All audio is procedurally generated via the **Web Audio API** — no audio files needed.
 
+### Music Tracks
 | Track | Plays during |
 |-------|-------------|
 | Title | Title screen |
-| Explore | World exploration |
-| Battle | Regular enemy combat |
+| Explore | Village, Tavern, Blacksmith, Forest Edge, Dark Wood |
+| Dungeon | The Sunken Dungeon exploration |
+| Shrine | Ruined Shrine exploration |
+| Ruins | Ancient Ruins exploration |
+| Battle | Regular combat (forest & dark wood areas) |
+| Forest Battle | Combat in dungeon, shrine & ruins areas |
 | Boss | Shadow King encounter |
 | Game Over | Death screen |
 | Victory | Victory screen |
 | Shop | Shop modal |
+
+### Sound Effects
+Attack, Crit, Hit, Heal, Level Up, Victory, Death, Purchase, Flee, Travel, Menu Click, Dodge, Poison, Burn, Stun, Craft, Achievement, Map Open
 
 ## 🚀 Getting Started
 

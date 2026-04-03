@@ -33,7 +33,7 @@ export default function App() {
     unlocked,
     checkCombat, checkPoison, checkBurn, checkExploration,
     checkQuests, checkPerks, checkCrafting, checkVictory,
-  } = useAchievements(notify);
+  } = useAchievements(notify, playSfx);
 
   const [showShop,         setShowShop]         = useState(false);
   const [showCraft,        setShowCraft]        = useState(false);
@@ -77,12 +77,24 @@ export default function App() {
     if (screen === 'title')    { playMusic('title');    return; }
     if (screen === 'gameover') { playMusic('gameover'); return; }
     if (screen === 'victory')  { playMusic('victory');  return; }
-    if (screen === 'explore')  { playMusic('explore');  return; }
-    if (screen === 'battle') {
-      playMusic(battleState?.enemy?.isBoss ? 'boss' : 'battle');
+    if (screen === 'explore') {
+      const loc = player.location;
+      if (loc === 'sunken_dungeon')  { playMusic('dungeon'); return; }
+      if (loc === 'ruined_shrine')   { playMusic('shrine');  return; }
+      if (loc === 'ancient_ruins')   { playMusic('ruins');   return; }
+      playMusic('explore');
       return;
     }
-  }, [screen, battleState?.enemy?.isBoss]);
+    if (screen === 'battle') {
+      if (battleState?.enemy?.isBoss) { playMusic('boss'); return; }
+      const loc = player.location;
+      if (loc === 'sunken_dungeon' || loc === 'ruined_shrine' || loc === 'ancient_ruins') {
+        playMusic('forest_battle'); return;
+      }
+      playMusic('battle');
+      return;
+    }
+  }, [screen, battleState?.enemy?.isBoss, player.location]);
 
   useEffect(() => {
     if (showShop) { playMusic('shop'); return; }
@@ -144,6 +156,24 @@ export default function App() {
   };
 
   const handleEnemyTurn = () => { playSfx('hit'); enemyAttack(); };
+
+  // Dodge SFX
+  useEffect(() => {
+    if (battleState?.lastDmg?.dodged) playSfx('dodge');
+  }, [battleState?.lastDmg?.id]);
+  const prevEnemyStatus = useRef([]);
+  useEffect(() => {
+    const current = battleState?.enemyStatus || [];
+    const prev    = prevEnemyStatus.current;
+    current.forEach(s => {
+      if (!prev.find(p => p.id === s.id)) {
+        if (s.id === 'poison') playSfx('poison');
+        if (s.id === 'burn')   playSfx('burn');
+      }
+    });
+    if (battleState?.turn === 'player_stunned') playSfx('stun');
+    prevEnemyStatus.current = current;
+  }, [battleState?.enemyStatus, battleState?.turn]);
 
   // ── Screens ────────────────────────────────────────────────────────────────
   if (screen === 'title') return (
@@ -253,7 +283,7 @@ export default function App() {
             onShop={() => setShowShop(true)}
             onCraft={() => setShowCraft(true)}
             onQuestBoard={() => setShowQuests(true)}
-            onMap={() => setShowMap(true)}
+            onMap={() => { playSfx('mapOpen'); setShowMap(true); }}
             onRest={handleRest}
             log={log}
           />
@@ -274,12 +304,12 @@ export default function App() {
         )}
       </main>
 
-      {showShop         && <ShopScreen        player={player} onBuy={handleBuy}                          onClose={() => setShowShop(false)}         />}
-      {showCraft        && <CraftingModal     player={player} onCraft={(r) => { craftItem(r); }}         onClose={() => setShowCraft(false)}        />}
+      {showShop         && <ShopScreen        player={player} onBuy={handleBuy}                                          onClose={() => setShowShop(false)}         />}
+      {showCraft        && <CraftingModal     player={player} onCraft={(r) => { playSfx('craft'); craftItem(r); }}       onClose={() => setShowCraft(false)}        />}
       {showInventory    && <InventoryModal    player={player} difficulty={difficulty} battleState={battleState} onUse={i => handleUseItem(i, !!battleState)} onClose={() => setShowInventory(false)} />}
-      {showQuests       && <QuestBoard        quests={quests} onClaim={claimQuest}                       onClose={() => setShowQuests(false)}       />}
-      {showAchievements && <AchievementPanel  unlocked={unlocked}                                        onClose={() => setShowAchievements(false)} />}
-      {showMap          && <WorldMap          player={player} visitedLocations={visitedLocations}        onTravel={handleTravel} onClose={() => setShowMap(false)} />}
+      {showQuests       && <QuestBoard        quests={quests} onClaim={claimQuest}                                       onClose={() => setShowQuests(false)}       />}
+      {showAchievements && <AchievementPanel  unlocked={unlocked}                                                        onClose={() => setShowAchievements(false)} />}
+      {showMap          && <WorldMap          player={player} visitedLocations={visitedLocations}                        onTravel={handleTravel} onClose={() => setShowMap(false)} />}
       {showAudio        && (
         <AudioSettings
           musicVol={musicVol}
