@@ -145,6 +145,13 @@ export const SOUNDS = {
       playTone(ctx, { freq: f, type: 'sawtooth', gain: v * 0.22, duration: 0.06, delay: i * 0.04 })
     );
   },
+  // Mage perk — ascending arcane sparkle
+  perkMage(ctx, v) {
+    if (!ctx || !v) return;
+    [523, 659, 830, 1047, 1319].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'triangle', gain: v * 0.24, duration: 0.16, delay: i * 0.06 })
+    );
+  },
   // Inventory bag open — soft rustling
   inventoryOpen(ctx, v) {
     if (!ctx || !v) return;
