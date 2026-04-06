@@ -145,12 +145,27 @@ export const SOUNDS = {
       playTone(ctx, { freq: f, type: 'sawtooth', gain: v * 0.22, duration: 0.06, delay: i * 0.04 })
     );
   },
-  // Mage perk — ascending arcane sparkle
-  perkMage(ctx, v) {
+  // Inventory bag open — soft rustling
+  inventoryOpen(ctx, v) {
     if (!ctx || !v) return;
-    [523, 659, 830, 1047, 1319].forEach((f, i) =>
-      playTone(ctx, { freq: f, type: 'triangle', gain: v * 0.24, duration: 0.16, delay: i * 0.06 })
+    [800, 650, 500, 400].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'triangle', gain: v * 0.10, duration: 0.06, delay: i * 0.03 })
     );
+  },
+  // Save slot erased — short descending finality
+  slotErase(ctx, v) {
+    if (!ctx || !v) return;
+    [300, 220, 160, 100].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'sawtooth', gain: v * 0.22, duration: 0.10, delay: i * 0.07 })
+    );
+  },
+  // New game start — brief heroic sting
+  newGame(ctx, v) {
+    if (!ctx || !v) return;
+    [261, 329, 392, 523].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'triangle', gain: v * 0.30, duration: 0.18, delay: i * 0.09 })
+    );
+    playTone(ctx, { freq: 784, type: 'sine', gain: v * 0.22, duration: 0.35, delay: 0.40 });
   },
 };
 

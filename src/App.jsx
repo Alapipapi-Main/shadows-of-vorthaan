@@ -225,7 +225,7 @@ export default function App() {
               loadSlot(slot);
             }
           }}
-          onErase={(slot) => { eraseSlot(slot); setSlotPicker(null); setTimeout(() => setSlotPicker(slotPicker), 50); }}
+          onErase={(slot) => { playSfx('slotErase'); eraseSlot(slot); setSlotPicker(null); setTimeout(() => setSlotPicker(slotPicker), 50); }}
           onClose={() => setSlotPicker(null)}
         />
       )}
@@ -235,6 +235,7 @@ export default function App() {
             .filter(s => !s.empty && s.slot !== newGameSlot)
             .map(s => s.player.name)}
           onStart={({ name, difficulty }) => {
+            playSfx('newGame');
             setNewGameSlot(null);
             loadSlot(newGameSlot, { name, difficulty });
           }}
@@ -298,10 +299,10 @@ export default function App() {
         musicVol={musicVol}
         sfxVol={sfxVol}
         unlockedCount={Object.keys(unlocked).length}
-        onInventory={() => setShowInventory(true)}
+        onInventory={() => { playSfx('inventoryOpen'); setShowInventory(true); }}
         onQuestBoard={() => setShowQuests(true)}
-        onAchievements={() => setShowAchievements(true)}
-        onAudio={() => setShowAudio(true)}
+        onAchievements={() => { playSfx('menuClick'); setShowAchievements(true); }}
+        onAudio={() => { playSfx('menuClick'); setShowAudio(true); }}
       />
 
       <main className="main-content">

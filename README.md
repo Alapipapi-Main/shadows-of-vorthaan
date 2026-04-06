@@ -182,7 +182,7 @@ All audio is procedurally generated via the **Web Audio API** — no audio files
 | Shop | Shop modal |
 
 ### Sound Effects
-Attack, Crit, Hit, Heal, Level Up, Victory, Death, Purchase, Flee, Travel, Menu Click, Dodge, Poison, Burn, Stun, Craft, Achievement, Map Open, Quest Claim, Perk Warrior, Perk Rogue, Perk Mage
+Attack, Crit, Hit, Heal, Level Up, Victory, Death, Purchase, Flee, Travel, Menu Click, Dodge, Poison, Burn, Stun, Craft, Achievement, Map Open, Quest Claim, Perk Warrior, Perk Rogue, Perk Mage, Inventory Open, Slot Erase, New Game
 
 ## 🚀 Getting Started
 
