@@ -124,6 +124,34 @@ export const SOUNDS = {
       playTone(ctx, { freq: f, type: 'triangle', gain: v * 0.18, duration: 0.18, delay: i * 0.08 })
     );
   },
+  // Quest reward claimed — coin drop feel
+  questClaim(ctx, v) {
+    if (!ctx || !v) return;
+    playTone(ctx, { freq: 880, type: 'sine', gain: v * 0.28, duration: 0.08 });
+    playTone(ctx, { freq: 1047, type: 'sine', gain: v * 0.22, duration: 0.10, delay: 0.07 });
+    playTone(ctx, { freq: 1318, type: 'sine', gain: v * 0.18, duration: 0.18, delay: 0.15 });
+  },
+  // Warrior perk — heavy, grounded thud
+  perkWarrior(ctx, v) {
+    if (!ctx || !v) return;
+    playTone(ctx, { freq: 80,  type: 'square',   gain: v * 0.45, duration: 0.18 });
+    playTone(ctx, { freq: 120, type: 'sawtooth', gain: v * 0.28, duration: 0.25, delay: 0.1 });
+    playTone(ctx, { freq: 160, type: 'sine',     gain: v * 0.20, duration: 0.30, delay: 0.2 });
+  },
+  // Rogue perk — sharp, quick blade-flick
+  perkRogue(ctx, v) {
+    if (!ctx || !v) return;
+    [600, 750, 900, 1100].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'sawtooth', gain: v * 0.22, duration: 0.06, delay: i * 0.04 })
+    );
+  },
+  // Mage perk — ascending arcane sparkle
+  perkMage(ctx, v) {
+    if (!ctx || !v) return;
+    [523, 659, 830, 1047, 1319].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'triangle', gain: v * 0.24, duration: 0.16, delay: i * 0.06 })
+    );
+  },
 };
 
 // ── Music tracks ──────────────────────────────────────────────────────────────
@@ -209,6 +237,14 @@ const TRACKS = {
     notes: [196, 0, 196, 220, 0, 196, 0, 247, 196, 0, 174, 0, 196, 220, 196, 0],
     type: 'square',
     baseGain: 0.06,
+  },
+  // Warm, rhythmic forge ambience — Gregor's crafting modal
+  crafting: {
+    bpm: 72,
+    notes: [261, 0, 293, 0, 261, 0, 246, 0, 261, 293, 0, 329, 0, 293, 261, 0],
+    harmony: [130, 0, 146, 0, 130, 0, 123, 0, 130, 146, 0, 164, 0, 146, 130, 0],
+    type: 'triangle',
+    baseGain: 0.075,
   },
 };
 

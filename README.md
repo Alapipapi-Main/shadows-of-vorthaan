@@ -173,6 +173,7 @@ All audio is procedurally generated via the **Web Audio API** — no audio files
 | Dungeon | The Sunken Dungeon exploration |
 | Shrine | Ruined Shrine exploration |
 | Ruins | Ancient Ruins exploration |
+| Crafting | Gregor's Forge crafting modal |
 | Battle | Regular combat (forest & dark wood areas) |
 | Forest Battle | Combat in dungeon, shrine & ruins areas |
 | Boss | Shadow King encounter |
@@ -181,7 +182,7 @@ All audio is procedurally generated via the **Web Audio API** — no audio files
 | Shop | Shop modal |
 
 ### Sound Effects
-Attack, Crit, Hit, Heal, Level Up, Victory, Death, Purchase, Flee, Travel, Menu Click, Dodge, Poison, Burn, Stun, Craft, Achievement, Map Open
+Attack, Crit, Hit, Heal, Level Up, Victory, Death, Purchase, Flee, Travel, Menu Click, Dodge, Poison, Burn, Stun, Craft, Achievement, Map Open, Quest Claim, Perk Warrior, Perk Rogue, Perk Mage
 
 ## 🚀 Getting Started
 

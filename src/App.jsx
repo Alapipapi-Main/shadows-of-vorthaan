@@ -97,10 +97,17 @@ export default function App() {
   }, [screen, battleState?.enemy?.isBoss, player.location]);
 
   useEffect(() => {
-    if (showShop) { playMusic('shop'); return; }
+    if (showShop)  { playMusic('shop');     return; }
+    if (showCraft) { playMusic('crafting'); return; }
     if (screen === 'title')   playMusic('title');
-    if (screen === 'explore') playMusic('explore');
-  }, [showShop]);
+    if (screen === 'explore') {
+      const loc = player.location;
+      if (loc === 'sunken_dungeon') { playMusic('dungeon'); return; }
+      if (loc === 'ruined_shrine')  { playMusic('shrine');  return; }
+      if (loc === 'ancient_ruins')  { playMusic('ruins');   return; }
+      playMusic('explore');
+    }
+  }, [showShop, showCraft]);
 
   // ── Sound effects ──────────────────────────────────────────────────────────
   const handleAttack = () => { playSfx('attack'); playerAttack(); };
@@ -331,7 +338,7 @@ export default function App() {
       {showShop         && <ShopScreen        player={player} onBuy={handleBuy}                                          onClose={() => setShowShop(false)}         />}
       {showCraft        && <CraftingModal     player={player} onCraft={(r) => { playSfx('craft'); craftItem(r); }}       onClose={() => setShowCraft(false)}        />}
       {showInventory    && <InventoryModal    player={player} difficulty={difficulty} battleState={battleState} onUse={i => handleUseItem(i, !!battleState)} onClose={() => setShowInventory(false)} />}
-      {showQuests       && <QuestBoard        quests={quests} onClaim={claimQuest}                                       onClose={() => setShowQuests(false)}       />}
+      {showQuests       && <QuestBoard        quests={quests} onClaim={(id) => { playSfx('questClaim'); claimQuest(id); }}  onClose={() => setShowQuests(false)}       />}
       {showAchievements && <AchievementPanel  unlocked={unlocked}                                                        onClose={() => setShowAchievements(false)} />}
       {showMap          && <WorldMap          player={player} visitedLocations={visitedLocations}                        onTravel={handleTravel} onClose={() => setShowMap(false)} />}
       {showAudio        && (
@@ -346,7 +353,14 @@ export default function App() {
       {pendingLevelUp && (
         <SkillTreeModal
           player={player}
-          onPick={(perkId, pathId) => { playSfx('levelUp'); pickPerk(perkId, pathId); }}
+          onPick={(perkId, pathId) => {
+            if (pathId === 'warrior') playSfx('perkWarrior');
+            else if (pathId === 'rogue') playSfx('perkRogue');
+            else if (pathId === 'mage') playSfx('perkMage');
+            else playSfx('levelUp');
+            if (!perkId) return; // dismissed when maxed
+            pickPerk(perkId, pathId);
+          }}
         />
       )}
     </div>
