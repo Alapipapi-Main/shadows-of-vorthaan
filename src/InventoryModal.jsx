@@ -52,12 +52,17 @@ export default function InventoryModal({ player, onUse, onClose, difficulty, bat
             )}
             <div className={styles.items}>
               {player.inventory.map((item, idx) => {
-                const isMaterial   = item.type === 'material' || item.type === 'key_item';
-                const inBattle     = !!battleState;
+                const isMaterial    = item.type === 'material' || item.type === 'key_item';
+                const inBattle      = !!battleState;
+                const isPlayerTurn  = battleState?.turn === 'player';
                 const alreadyActive = item.effect === 'evasion_tonic' &&
                   battleState && (battleState.buffs?.dodgeChance ?? 0) > 0;
-                // Materials never get a Use button; consumables only in battle
-                const showUse = !isMaterial && inBattle;
+                // Materials never get a Use button; consumables only on player's turn in battle
+                const showUse    = !isMaterial && inBattle;
+                const canUse     = isPlayerTurn && !alreadyActive;
+                const disableMsg = alreadyActive ? 'Already active this battle'
+                  : !isPlayerTurn  ? 'Not your turn'
+                  : '';
                 return (
                   <div key={idx} className={styles.item}>
                     <span className={styles.itemIcon}>{item.icon}</span>
@@ -68,9 +73,9 @@ export default function InventoryModal({ player, onUse, onClose, difficulty, bat
                     {showUse && (
                       <button
                         className={styles.useBtn}
-                        onClick={() => { if (!alreadyActive) { onUse(item); onClose(); } }}
-                        disabled={alreadyActive}
-                        title={alreadyActive ? 'Already active this battle' : ''}
+                        onClick={() => { if (canUse) { onUse(item); onClose(); } }}
+                        disabled={!canUse}
+                        title={disableMsg}
                       >
                         {alreadyActive ? '✓ Active' : 'Use'}
                       </button>

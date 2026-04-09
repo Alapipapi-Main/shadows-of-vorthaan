@@ -12,7 +12,7 @@ import SaveSlotPicker from './SaveSlotPicker';
 import NewGameSetup from './NewGameSetup';
 import CraftingModal from './CraftingModal';
 import SkillTreeModal from './SkillTreeModal';
-import AudioSettings from './AudioSettings';
+import SettingsModal from './SettingsModal';
 import AchievementPanel from './AchievementPanel';
 import WorldMap from './WorldMap';
 import { TitleScreen, GameOverScreen, VictoryScreen } from './SpecialScreens';
@@ -343,7 +343,7 @@ export default function App() {
       {showAchievements && <AchievementPanel  unlocked={unlocked}                                                        onClose={() => setShowAchievements(false)} />}
       {showMap          && <WorldMap          player={player} visitedLocations={visitedLocations}                        onTravel={handleTravel} onClose={() => setShowMap(false)} />}
       {showAudio        && (
-        <AudioSettings
+        <SettingsModal
           musicVol={musicVol}
           sfxVol={sfxVol}
           onMusicVol={setMusicVol}

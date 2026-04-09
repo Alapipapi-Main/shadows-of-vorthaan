@@ -46,8 +46,8 @@ export default function HUD({ player, quests, difficulty, musicVol, sfxVol, unlo
         <button className={styles.audioBtn} onClick={onAchievements} title="Achievements & Bestiary">
           🏆
         </button>
-        <button className={styles.audioBtn} onClick={onAudio} title="Audio Settings">
-          {isMuted ? '🔇' : '🎵'}
+        <button className={styles.audioBtn} onClick={onAudio} title="Settings">
+          {isMuted ? '🔇' : '⚙️'}
         </button>
       </div>
     </div>

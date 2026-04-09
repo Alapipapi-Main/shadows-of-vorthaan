@@ -230,6 +230,7 @@ src/
 ├── SkillTreeModal.jsx     # Level-up perk picker
 ├── SaveSlotPicker.jsx     # 3-slot save/load picker modal
 ├── NewGameSetup.jsx       # Character name & difficulty selection
-├── AudioSettings.jsx      # Music & SFX volume sliders
+├── AudioSettings.jsx      # Legacy audio modal (replaced by SettingsModal)
+├── SettingsModal.jsx      # Settings panel — Audio, Display, Data tabs
 └── SpecialScreens.jsx     # Title, Game Over, Victory screens
 ```
