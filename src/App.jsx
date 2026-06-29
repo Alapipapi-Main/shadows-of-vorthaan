@@ -25,7 +25,7 @@ export default function App() {
     travel, startBattle, playerAttack, playerDefend, enemyAttack,
     resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog, notify,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
-    visitedLocations, totalPoisons, totalBurns, totalCrafted, battleFlagsRef, endBattleCleanup,
+    visitedLocations, totalPoisons, totalBurns, totalCrafted, battleFlagsRef, endBattleCleanup, skipStunnedTurn,
   } = useGameState();
 
   const { musicVol, sfxVol, setMusicVol, setSfxVol, playMusic, playSfx } = useAudio();
@@ -33,6 +33,7 @@ export default function App() {
     unlocked,
     checkCombat, checkPoison, checkBurn, checkExploration,
     checkQuests, checkPerks, checkCrafting, checkVictory,
+    resetUnlocked,
   } = useAchievements(notify, playSfx);
 
   const [showShop,         setShowShop]         = useState(false);
@@ -225,7 +226,18 @@ export default function App() {
               loadSlot(slot);
             }
           }}
-          onErase={(slot) => { playSfx('slotErase'); eraseSlot(slot); setSlotPicker(null); setTimeout(() => setSlotPicker(slotPicker), 50); }}
+          onErase={(slot) => {
+            playSfx('slotErase');
+            eraseSlot(slot);
+            // Re-open picker only if there are still saves left; if last save deleted close it
+            const remaining = getAllSlots().filter(s => !s.empty && s.slot !== slot).length;
+            if (remaining > 0) {
+              setSlotPicker(null);
+              setTimeout(() => setSlotPicker(slotPicker), 50);
+            } else {
+              setSlotPicker(null);
+            }
+          }}
           onClose={() => setSlotPicker(null)}
         />
       )}
@@ -328,6 +340,7 @@ export default function App() {
             onDefend={handleDefend}
             onFlee={handleFlee}
             onEnemyTurn={handleEnemyTurn}
+            onStunSkip={skipStunnedTurn}
             onResolveVictory={handleResolveVictory}
             onUseItem={handleUseItem}
             log={log}
@@ -348,6 +361,19 @@ export default function App() {
           sfxVol={sfxVol}
           onMusicVol={setMusicVol}
           onSfxVol={setSfxVol}
+          onClearAchievements={resetUnlocked}
+          onClearAll={() => {
+            // Wipe all persisted game data
+            Object.keys(localStorage)
+              .filter(k => k.startsWith('vorhaan_'))
+              .forEach(k => localStorage.removeItem(k));
+            // Reset all settings state back to defaults so UI reflects the wipe instantly
+            setMusicVol(0.5);
+            setSfxVol(0.7);
+            resetUnlocked();
+            setShowAudio(false);
+            goToTitle();
+          }}
           onClose={() => setShowAudio(false)}
         />
       )}

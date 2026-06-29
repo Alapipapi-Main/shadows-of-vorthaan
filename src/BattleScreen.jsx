@@ -21,7 +21,7 @@ function FloatingNumber({ value, isCrit, target, dodged, id }) {
 }
 
 export default function BattleScreen({
-  player, battleState, onAttack, onDefend, onFlee, onEnemyTurn, onResolveVictory, onUseItem, log, battleLog,
+  player, battleState, onAttack, onDefend, onFlee, onEnemyTurn, onStunSkip, onResolveVictory, onUseItem, log, battleLog,
 }) {
   const [floats, setFloats] = useState([]);
   const [enemyShake, setEnemyShake] = useState(false);
@@ -68,7 +68,7 @@ export default function BattleScreen({
       return () => clearTimeout(t);
     }
     if (battleState.turn === 'player_stunned') {
-      const t = setTimeout(onEnemyTurn, 1400);
+      const t = setTimeout(onStunSkip, 1400);
       return () => clearTimeout(t);
     }
     if (battleState.turn === 'resolved') {
