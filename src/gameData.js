@@ -437,15 +437,58 @@ export const DIFFICULTIES = {
 export const BOSS_PATTERNS = {
   // Phase 1 (HP > 50%): normal rotation
   phase1: ['strike', 'strike', 'charge', 'strike', 'curse', 'strike', 'charge', 'strike'],
-  // Phase 2 (HP <= 50%): more aggressive, adds dark_heal
-  phase2: ['charge', 'strike', 'curse', 'charge', 'strike', 'dark_heal', 'charge', 'curse'],
+  // Phase 2 (HP <= 50%): more aggressive — adds soul_drain that steals HP
+  phase2: ['charge', 'strike', 'curse', 'soul_drain', 'charge', 'strike', 'dark_heal', 'soul_drain', 'charge', 'curse'],
 };
 
 export const BOSS_ATTACKS = {
-  strike:    { name: 'Shadow Strike',  atkMult: 1.0,  log: (name) => `👑 ${name} strikes with a shadow blade!` },
-  charge:    { name: 'Dark Charge',    atkMult: 1.6,  log: (name) => `💥 ${name} charges up and unleashes Dark Charge!` },
-  curse:     { name: 'Void Curse',     atkMult: 0.8,  debuff: { def: -5 }, log: (name) => `🌑 ${name} casts Void Curse — your defences weaken!` },
-  dark_heal: { name: 'Dark Ritual',    atkMult: 0.0,  heal: 40, log: (name) => `🩸 ${name} performs a Dark Ritual — restoring 40 HP!` },
+  strike:     { name: 'Shadow Strike',  atkMult: 1.0,  log: (name) => `${name} strikes with a shadow blade!` },
+  charge:     { name: 'Dark Charge',    atkMult: 1.6,  log: (name) => `${name} charges up and unleashes Dark Charge!` },
+  curse:      { name: 'Void Curse',     atkMult: 0.8,  debuff: { def: -5 }, log: (name) => `${name} casts Void Curse — your defences weaken!` },
+  dark_heal:  { name: 'Dark Ritual',    atkMult: 0.0,  heal: 40, log: (name) => `${name} performs a Dark Ritual — restoring 40 HP!` },
+  soul_drain: { name: 'Soul Drain',     atkMult: 1.2,  steal: 30, log: (name) => `${name} tears at your soul — stealing your life force!` },
+};
+
+// ── Combo system ──────────────────────────────────────────────────────────────
+// After this many consecutive attacks (without defending or using an item), trigger a free bonus hit
+export const COMBO_THRESHOLD = 3;
+
+// ── Enemy resistances ─────────────────────────────────────────────────────────
+// 'immune' = 0 damage and status never applies; 'resist' = half status duration (future use)
+export const ENEMY_RESISTANCES = {
+  // Undead — immune to poison (no biology to corrupt)
+  skeleton_warrior: { poison: 'immune' },
+  bone_archer:      { poison: 'immune' },
+  phantom_knight:   { poison: 'immune' },
+  cursed_shade:     { poison: 'immune' },
+  // Stone/earth — immune to burn (no flesh to ignite)
+  stone_golem:      { burn: 'immune' },
+  cave_troll:       { burn: 'immune' },
+};
+
+// ── Enemy special moves ───────────────────────────────────────────────────────
+// Triggered at certain conditions during the enemy attack phase
+export const ENEMY_SPECIAL_MOVES = {
+  // Cave Troll — every 3rd round does a Ground Slam: 1.8x damage + player loses 5 DEF for 1 turn
+  cave_troll: {
+    id: 'ground_slam',
+    name: 'Ground Slam',
+    triggerEvery: 3,  // triggers on round % triggerEvery === 0
+    atkMult: 1.8,
+    debuff: { def: -5 },
+    log: (name) => `${name} smashes the ground with both fists — Ground Slam!`,
+    sfx: 'groundSlam',
+  },
+  // Phantom Knight — every 4th round it phases and counter-attacks for reduced damage
+  phantom_knight: {
+    id: 'phase_counter',
+    name: 'Phase Counter',
+    triggerEvery: 4,
+    atkMult: 0.9,
+    phaseShift: true,  // renders the player's attack as a miss this round too
+    log: (name) => `${name} phases into shadow and counter-strikes!`,
+    sfx: 'phaseShift',
+  },
 };
 
 // ── Skill tree ────────────────────────────────────────────────────────────────

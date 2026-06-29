@@ -4,7 +4,7 @@ import {
   readAchievements, writeAchievements,
   readBestiary, recordBestiaryKill, recordBestiaryEncounter,
 } from './achievementData';
-import { ENEMIES } from './gameData';
+import { ENEMIES, ENEMY_RESISTANCES } from './gameData';
 
 const TOTAL_ENEMIES = Object.keys(ENEMIES).filter(id => id !== 'shadow_king').length + 1; // include boss
 const TOTAL_QUESTS  = 20;
@@ -95,6 +95,18 @@ export default function useAchievements(notify, playSfx) {
     if (player.level < 8)         unlock('speed_runner');
   }, [unlock]);
 
+  // Session 1 — Combat Depth checks
+  const checkSession1Combat = useCallback((opts = {}) => {
+    const { comboLanded, killedEnemyId, survivedSoulDrain } = opts;
+    if (comboLanded)       unlock('combo_striker');
+    if (survivedSoulDrain) unlock('soul_survivor');
+    if (killedEnemyId) {
+      const resists = ENEMY_RESISTANCES[killedEnemyId] ?? {};
+      const isResistant = resists.poison === 'immune' || resists.burn === 'immune';
+      if (isResistant) unlock('iron_constitution');
+    }
+  }, [unlock]);
+
   const checkBestiaryEncounter = useCallback((enemyId) => {
     recordBestiaryEncounter(enemyId);
   }, []);
@@ -116,5 +128,6 @@ export default function useAchievements(notify, playSfx) {
     checkVictory,
     checkBestiaryEncounter,
     resetUnlocked,
+    checkSession1Combat,
   };
 }

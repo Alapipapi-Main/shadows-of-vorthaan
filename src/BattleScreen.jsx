@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { BOSS_PATTERNS, BOSS_ATTACKS, STATUS_EFFECTS } from './gameData';
+import { BOSS_PATTERNS, BOSS_ATTACKS, STATUS_EFFECTS, ENEMY_RESISTANCES, ENEMY_SPECIAL_MOVES, COMBO_THRESHOLD } from './gameData';
 import styles from './BattleScreen.module.css';
 
 function FloatingNumber({ value, isCrit, target, dodged, id }) {
@@ -21,7 +21,7 @@ function FloatingNumber({ value, isCrit, target, dodged, id }) {
 }
 
 export default function BattleScreen({
-  player, battleState, onAttack, onDefend, onFlee, onEnemyTurn, onStunSkip, onResolveVictory, onUseItem, log, battleLog,
+  player, battleState, onAttack, onDefend, onFlee, onEnemyTurn, onStunSkip, onComboHit, onResolveVictory, onUseItem, log, battleLog,
 }) {
   const [floats, setFloats] = useState([]);
   const [enemyShake, setEnemyShake] = useState(false);
@@ -71,6 +71,11 @@ export default function BattleScreen({
       const t = setTimeout(onStunSkip, 1400);
       return () => clearTimeout(t);
     }
+    if (battleState.turn === 'player_combo') {
+      // Brief delay so the player sees the "Combo!" message before the bonus hit fires
+      const t = setTimeout(onComboHit, 600);
+      return () => clearTimeout(t);
+    }
     if (battleState.turn === 'resolved') {
       const t = setTimeout(onResolveVictory, 700);
       return () => clearTimeout(t);
@@ -84,7 +89,25 @@ export default function BattleScreen({
   const playerHpPct = (player.hp / player.maxHp) * 100;
   const isPlayerTurn = battleState.turn === 'player';
   const isStunned    = battleState.turn === 'player_stunned';
-  const isEnemyTurn  = !isPlayerTurn && !isStunned;
+  const isCombo      = battleState.turn === 'player_combo';
+  const isEnemyTurn  = !isPlayerTurn && !isStunned && !isCombo;
+
+  // Combo counter
+  const comboCount = battleState.comboCount ?? 0;
+  const comboPct   = Math.min((comboCount / COMBO_THRESHOLD) * 100, 100);
+
+  // Enemy resistances for display
+  const enemyResists = ENEMY_RESISTANCES[enemy.id] ?? {};
+  const resistTags = Object.entries(enemyResists)
+    .filter(([, val]) => val === 'immune')
+    .map(([status]) => status);
+
+  // Upcoming special move warning
+  const specialDef = ENEMY_SPECIAL_MOVES[enemy.id];
+  const nextSpecialIn = specialDef
+    ? specialDef.triggerEvery - ((battleState.round || 1) % specialDef.triggerEvery || specialDef.triggerEvery)
+    : null;
+  const specialWarning = nextSpecialIn !== null && nextSpecialIn <= 1;
   const maxBattleItems = player.inventory.some(i => i.id === 'leather_pouch') ? 5 : 3;
   const battleItems = player.inventory
     .filter(i => i.type === 'consumable')
@@ -143,6 +166,20 @@ export default function BattleScreen({
               ))}
             </div>
           )}
+          {resistTags.length > 0 && (
+            <div className={styles.resistRow}>
+              {resistTags.map(r => (
+                <span key={r} className={styles.resistTag} title={`Immune to ${r}`}>
+                  {r === 'poison' ? 'Poison Immune' : 'Burn Immune'}
+                </span>
+              ))}
+            </div>
+          )}
+          {specialDef && specialWarning && (
+            <div className={styles.specialWarning}>
+              {specialDef.name} incoming!
+            </div>
+          )}
         </div>
 
         <div className={styles.vsText}>⚔️</div>
@@ -199,8 +236,25 @@ export default function BattleScreen({
 
       {/* Actions */}
       <div className={styles.actions}>
-        <div className={`${styles.turnIndicator} ${isStunned ? styles.stunned : ''}`}>
-          {isPlayerTurn ? '⚡ Your Turn' : isStunned ? '💫 Stunned — turn skipped!' : '⏳ Enemy Turn...'}
+        {/* Combo bar — only shows when not a boss fight */}
+        {!enemy.isBoss && (
+          <div className={styles.comboBarWrap}>
+            <div className={styles.comboBarLabel}>
+              Combo {comboCount}/{COMBO_THRESHOLD}
+            </div>
+            <div className={styles.comboBarTrack}>
+              <div
+                className={`${styles.comboBarFill} ${comboPct >= 100 ? styles.comboBarFull : ''}`}
+                style={{ width: `${comboPct}%` }}
+              />
+            </div>
+          </div>
+        )}
+        <div className={`${styles.turnIndicator} ${isStunned ? styles.stunned : ''} ${isCombo ? styles.combo : ''}`}>
+          {isPlayerTurn ? 'Your Turn'
+            : isStunned ? 'Stunned — turn skipped!'
+            : isCombo   ? 'Combo! Bonus strike incoming...'
+            : 'Enemy Turn...'}
         </div>
         <div className={styles.buttons}>
           <button className={`${styles.btn} ${styles.attackBtn}`} onClick={onAttack} disabled={!isPlayerTurn}>

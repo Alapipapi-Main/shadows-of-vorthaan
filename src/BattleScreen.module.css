@@ -379,8 +379,90 @@
   animation: pulse 0.8s ease-in-out infinite;
 }
 
+.combo {
+  color: #ffcc44 !important;
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
 .floatMiss {
   color: #aaaaaa !important;
   font-size: 1.1rem !important;
   letter-spacing: 0.1em;
+}
+
+/* ── Combo bar ──────────────────────────────────────────────────────────────── */
+.comboBarWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.comboBarLabel {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+.comboBarTrack {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.comboBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #a05010, #e08020, #ffcc44);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.comboBarFull {
+  background: linear-gradient(90deg, #cc8800, #ffdd44, #ffffff88);
+  animation: comboPulse 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes comboPulse {
+  from { opacity: 0.8; }
+  to   { opacity: 1; box-shadow: 0 0 8px #ffcc44; }
+}
+
+/* ── Resistance tags ────────────────────────────────────────────────────────── */
+.resistRow {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.resistTag {
+  font-size: 0.6rem;
+  font-family: 'Cinzel', serif;
+  background: rgba(80, 60, 20, 0.35);
+  border: 1px solid rgba(200, 160, 40, 0.3);
+  color: #c8a028;
+  border-radius: 6px;
+  padding: 2px 7px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Special move warning ───────────────────────────────────────────────────── */
+.specialWarning {
+  font-family: 'Cinzel', serif;
+  font-size: 0.62rem;
+  color: #ff7070;
+  border: 1px solid rgba(180, 40, 40, 0.4);
+  background: rgba(120, 20, 20, 0.25);
+  border-radius: 6px;
+  padding: 3px 8px;
+  letter-spacing: 0.06em;
+  text-align: center;
+  animation: pulse 0.9s ease-in-out infinite;
 }

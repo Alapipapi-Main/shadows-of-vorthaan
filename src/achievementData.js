@@ -35,6 +35,11 @@ export const ACHIEVEMENTS = [
   // 💀 Difficulty
   { id: 'hardened',        icon: '💀', title: 'Hardened',         desc: 'Defeat the Shadow King on Hard difficulty',    category: 'Difficulty' },
   { id: 'speed_runner',    icon: '⚡', title: 'Speed Runner',     desc: 'Defeat the Shadow King below level 8',         category: 'Difficulty' },
+
+  // Session 1 — Combat Depth
+  { id: 'combo_striker',      icon: '⚡', title: 'Combo Striker',     desc: 'Land a 3-hit combo in a single battle',                   category: 'Combat' },
+  { id: 'iron_constitution',  icon: '🛡️', title: 'Iron Constitution', desc: 'Defeat a poison-immune or burn-immune enemy',              category: 'Combat' },
+  { id: 'soul_survivor',      icon: '🩸', title: 'Soul Survivor',     desc: 'Survive a Soul Drain attack from the Shadow King',        category: 'Combat' },
 ];
 
 const ACH_KEY = 'vorhaan_achievements';
