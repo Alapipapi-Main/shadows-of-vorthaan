@@ -363,9 +363,13 @@ export default function App() {
           onSfxVol={setSfxVol}
           onClearAchievements={resetUnlocked}
           onClearAll={() => {
+            // Wipe all persisted game data
             Object.keys(localStorage)
               .filter(k => k.startsWith('vorhaan_'))
               .forEach(k => localStorage.removeItem(k));
+            // Reset all settings state back to defaults so UI reflects the wipe instantly
+            setMusicVol(0.5);
+            setSfxVol(0.7);
             resetUnlocked();
             setShowAudio(false);
             goToTitle();

@@ -374,7 +374,7 @@ export function useGameState() {
     // Check if enemy dodges
     const enemyDodge = ENEMY_DODGE_CHANCE[battleState.enemy.id] ?? 0;
     if (enemyDodge > 0 && Math.random() < enemyDodge) {
-      addLog(`👻 ${battleState.enemy.name} phases through your attack �� Miss!`, 'danger');
+      addLog(`👻 ${battleState.enemy.name} phases through your attack ��� Miss!`, 'danger');
       setBattleState(prev => ({ ...prev, turn: 'enemy', lastDmg: { value: 0, isCrit: false, target: 'enemy', id: Date.now(), dodged: true }, soundEvents: ['dodge'] }));
       return;
     }
@@ -720,16 +720,16 @@ export function useGameState() {
   // Called to synchronously stop battle-mode logging and clear battle state.
   // Use this from UI code before adding a non-battle log (like 'fled' or 'victory')
   // so those entries don't get captured in battleLog due to a timing window.
-  // Called when the player's stunned turn auto-expires — just removes stun and gives turn back
+  // Called when the player's stunned turn auto-expires — removes stun then lets the enemy attack
   const skipStunnedTurn = useCallback(() => {
-    addLog(`💫 You are still stunned — your turn is skipped!`, 'danger');
+    addLog(`💫 Stunned! Your turn is skipped — the enemy attacks!`, 'danger');
     setPlayer(p => ({
       ...p,
       statusEffects: (p.statusEffects || []).filter(s => s.id !== 'stun'),
     }));
     setBattleState(prev => prev ? ({
       ...prev,
-      turn: 'player',
+      turn: 'enemy',
       lastDmg: null,
     }) : prev);
   }, [addLog]);

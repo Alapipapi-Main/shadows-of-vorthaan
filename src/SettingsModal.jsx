@@ -47,7 +47,10 @@ export default function SettingsModal({ musicVol, sfxVol, onMusicVol, onSfxVol, 
       setCleared('Bestiary cleared!');
     } else if (type === 'all') {
       if (onClearAll) {
-        onClearAll(); // handles wipe + redirect in App
+        // Reset font CSS var and local state before delegating wipe to parent
+        setFontSizeState('normal');
+        setFontSize('normal');
+        onClearAll(); // handles full localStorage wipe + redirect in App
         return;
       }
       Object.keys(localStorage)
