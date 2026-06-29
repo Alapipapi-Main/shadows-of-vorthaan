@@ -26,7 +26,7 @@ const savedFont = getFontSize();
 const savedFontEntry = FONT_SIZES.find(f => f.id === savedFont);
 if (savedFontEntry) document.documentElement.style.setProperty('--game-font-size', savedFontEntry.value);
 
-export default function SettingsModal({ musicVol, sfxVol, onMusicVol, onSfxVol, onClose }) {
+export default function SettingsModal({ musicVol, sfxVol, onMusicVol, onSfxVol, onClearAchievements, onClearAll, onClose }) {
   const [tab, setTab]           = useState('audio');
   const [fontSize, setFontSizeState] = useState(getFontSize);
   const [confirm, setConfirm]   = useState(null); // 'achievements' | 'bestiary' | 'all'
@@ -39,17 +39,21 @@ export default function SettingsModal({ musicVol, sfxVol, onMusicVol, onSfxVol, 
 
   const handleClear = (type) => {
     if (type === 'achievements') {
-      writeAchievements({});
+      if (onClearAchievements) onClearAchievements();
+      else writeAchievements({});
       setCleared('Achievements cleared!');
     } else if (type === 'bestiary') {
       writeBestiary({});
       setCleared('Bestiary cleared!');
     } else if (type === 'all') {
-      // Clear everything
+      if (onClearAll) {
+        onClearAll(); // handles wipe + redirect in App
+        return;
+      }
       Object.keys(localStorage)
         .filter(k => k.startsWith('vorhaan_'))
         .forEach(k => localStorage.removeItem(k));
-      setCleared('All data cleared — refresh to start fresh.');
+      setCleared('All data cleared — returning to title...');
     }
     setConfirm(null);
   };

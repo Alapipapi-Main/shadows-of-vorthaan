@@ -99,6 +99,11 @@ export default function useAchievements(notify, playSfx) {
     recordBestiaryEncounter(enemyId);
   }, []);
 
+  const resetUnlocked = useCallback(() => {
+    writeAchievements({});
+    setUnlocked({});
+  }, []);
+
   return {
     unlocked,
     checkCombat,
@@ -110,5 +115,6 @@ export default function useAchievements(notify, playSfx) {
     checkCrafting,
     checkVictory,
     checkBestiaryEncounter,
+    resetUnlocked,
   };
 }
