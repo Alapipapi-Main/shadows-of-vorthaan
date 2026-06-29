@@ -174,6 +174,61 @@ export const SOUNDS = {
     );
     playTone(ctx, { freq: 784, type: 'sine', gain: v * 0.22, duration: 0.35, delay: 0.40 });
   },
+  // Standard attack swing (non-crit)
+  attack(ctx, v) {
+    if (!ctx || !v) return;
+    playTone(ctx, { freq: 200, type: 'sawtooth', gain: v * 0.32, duration: 0.07 });
+    playTone(ctx, { freq: 140, type: 'square',   gain: v * 0.18, duration: 0.10, delay: 0.04 });
+  },
+  // Combo bonus strike — rapid ascending blades
+  comboHit(ctx, v) {
+    if (!ctx || !v) return;
+    [350, 440, 560, 700].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'sawtooth', gain: v * 0.28, duration: 0.06, delay: i * 0.04 })
+    );
+    playTone(ctx, { freq: 880, type: 'sine', gain: v * 0.22, duration: 0.20, delay: 0.18 });
+  },
+  // Combo threshold reached jingle — plays before the bonus hit
+  combo(ctx, v) {
+    if (!ctx || !v) return;
+    [523, 659, 784, 1047].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'triangle', gain: v * 0.26, duration: 0.10, delay: i * 0.05 })
+    );
+  },
+  // Cave Troll ground slam — deep, earth-shaking thud
+  groundSlam(ctx, v) {
+    if (!ctx || !v) return;
+    playTone(ctx, { freq: 55,  type: 'square',   gain: v * 0.55, duration: 0.35 });
+    playTone(ctx, { freq: 44,  type: 'sawtooth', gain: v * 0.35, duration: 0.50, delay: 0.15 });
+    playTone(ctx, { freq: 33,  type: 'sine',     gain: v * 0.25, duration: 0.70, delay: 0.30 });
+    // rubble rattle
+    [220, 180, 140].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'sawtooth', gain: v * 0.12, duration: 0.08, delay: 0.40 + i * 0.05 })
+    );
+  },
+  // Phantom Knight phase shift — whooshing ethereal
+  phaseShift(ctx, v) {
+    if (!ctx || !v) return;
+    [800, 650, 500, 380, 280].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'sine', gain: v * 0.20, duration: 0.10, delay: i * 0.06 })
+    );
+    playTone(ctx, { freq: 200, type: 'triangle', gain: v * 0.14, duration: 0.30, delay: 0.28 });
+  },
+  // Shadow King soul drain — ominous swell then sharp pull
+  soulDrain(ctx, v) {
+    if (!ctx || !v) return;
+    [55, 65, 77, 65, 55, 44].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'square', gain: v * 0.30, duration: 0.18, delay: i * 0.08 })
+    );
+    playTone(ctx, { freq: 33, type: 'sawtooth', gain: v * 0.40, duration: 0.60, delay: 0.45 });
+  },
+  // Boss heals — sinister restoration tone
+  bossHeal(ctx, v) {
+    if (!ctx || !v) return;
+    [110, 98, 87, 82].forEach((f, i) =>
+      playTone(ctx, { freq: f, type: 'triangle', gain: v * 0.22, duration: 0.22, delay: i * 0.09 })
+    );
+  },
 };
 
 // ── Music tracks ──────────────────────────────────────────────────────────────
@@ -266,6 +321,14 @@ const TRACKS = {
     notes: [261, 0, 293, 0, 261, 0, 246, 0, 261, 293, 0, 329, 0, 293, 261, 0],
     harmony: [130, 0, 146, 0, 130, 0, 123, 0, 130, 146, 0, 164, 0, 146, 130, 0],
     type: 'triangle',
+    baseGain: 0.075,
+  },
+  // Frantic, dissonant — Shadow King Phase 2 (HP <= 50%)
+  boss_phase2: {
+    bpm: 140,
+    notes: [65, 0, 65, 69, 0, 65, 73, 0, 65, 0, 58, 65, 0, 65, 69, 73],
+    harmony: [32, 0, 32, 34, 0, 32, 36, 0, 32, 0, 29, 32, 0, 32, 34, 36],
+    type: 'sawtooth',
     baseGain: 0.075,
   },
 };

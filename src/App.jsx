@@ -22,7 +22,7 @@ export default function App() {
   const {
     player, screen, setScreen, battleState, setBattleState, log, battleLog, notification, quests, activeSlot, difficulty,
     pendingLevelUp, pickPerk,
-    travel, startBattle, playerAttack, playerDefend, enemyAttack,
+    travel, startBattle, playerAttack, playerDefend, playerComboHit, enemyAttack,
     resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog, notify,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
     visitedLocations, totalPoisons, totalBurns, totalCrafted, battleFlagsRef, endBattleCleanup, skipStunnedTurn,
@@ -33,7 +33,7 @@ export default function App() {
     unlocked,
     checkCombat, checkPoison, checkBurn, checkExploration,
     checkQuests, checkPerks, checkCrafting, checkVictory,
-    resetUnlocked,
+    resetUnlocked, checkSession1Combat,
   } = useAchievements(notify, playSfx);
 
   const [showShop,         setShowShop]         = useState(false);
@@ -87,7 +87,11 @@ export default function App() {
       return;
     }
     if (screen === 'battle') {
-      if (battleState?.enemy?.isBoss) { playMusic('boss'); return; }
+      if (battleState?.enemy?.isBoss) {
+        // Switch to frantic phase 2 track when the boss enters phase 2
+        playMusic(battleState.bossPhase === 2 ? 'boss_phase2' : 'boss');
+        return;
+      }
       const loc = player.location;
       if (loc === 'sunken_dungeon' || loc === 'ruined_shrine' || loc === 'ancient_ruins') {
         playMusic('forest_battle'); return;
@@ -95,7 +99,7 @@ export default function App() {
       playMusic('battle');
       return;
     }
-  }, [screen, battleState?.enemy?.isBoss, player.location]);
+  }, [screen, battleState?.enemy?.isBoss, battleState?.bossPhase, player.location]);
 
   useEffect(() => {
     if (showShop)  { playMusic('shop');     return; }
@@ -111,8 +115,13 @@ export default function App() {
   }, [showShop, showCraft]);
 
   // ── Sound effects ──────────────────────────────────────────────────────────
-  const handleAttack = () => { playSfx('attack'); playerAttack(); };
-  const handleDefend = () => { playSfx('menuClick'); playerDefend(); };
+  const handleAttack    = () => { playSfx('attack'); playerAttack(); };
+  const handleDefend    = () => { playSfx('menuClick'); playerDefend(); };
+  const handleComboHit  = () => {
+    playSfx('comboHit');
+    checkSession1Combat({ comboLanded: true });
+    playerComboHit();
+  };
 
   const handleFlee = () => {
     const success = player.alwaysFlee || Math.random() > 0.4;
@@ -155,8 +164,14 @@ export default function App() {
     playSfx('victory');
     if (battleState?.enemy) {
       checkCombat(player, battleState.enemy, battleFlagsRef.current);
+      // Session 1: resistant kill
+      checkSession1Combat({ killedEnemyId: battleState.enemy.id });
       if (battleState.enemy.id === 'shadow_king') {
         checkVictory(player, difficulty);
+        // Session 1: survived soul drain (boss phase 2 reached and player still alive)
+        if (battleState.bossPhase === 2 && player.hp > 0) {
+          checkSession1Combat({ survivedSoulDrain: true });
+        }
       }
     }
     endBattleCleanup();
@@ -341,6 +356,7 @@ export default function App() {
             onFlee={handleFlee}
             onEnemyTurn={handleEnemyTurn}
             onStunSkip={skipStunnedTurn}
+            onComboHit={handleComboHit}
             onResolveVictory={handleResolveVictory}
             onUseItem={handleUseItem}
             log={log}

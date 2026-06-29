@@ -4,6 +4,7 @@ import {
   INITIAL_PLAYER, INITIAL_QUESTS, QUESTS,
   DIFFICULTIES, BOSS_PATTERNS, BOSS_ATTACKS,
   SKILL_PATHS, STATUS_EFFECTS, ENEMY_STATUS_CHANCE, ENEMY_DODGE_CHANCE,
+  ENEMY_RESISTANCES, ENEMY_SPECIAL_MOVES, COMBO_THRESHOLD,
   RECIPES,
   getXpToNext, getLevelStats,
 } from './gameData';
@@ -335,6 +336,8 @@ export function useGameState() {
       bossPhase: 1,
       lastDmg: null,
       soundEvents: [],
+      comboCount: 0,       // consecutive attacks without defending or items
+      comboReady: false,   // true when comboCount reaches COMBO_THRESHOLD
     });
     setScreen('battle');
     addLog(`⚔️ A ${enemy.name} appears!`, 'danger');
@@ -374,19 +377,35 @@ export function useGameState() {
     // Check if enemy dodges
     const enemyDodge = ENEMY_DODGE_CHANCE[battleState.enemy.id] ?? 0;
     if (enemyDodge > 0 && Math.random() < enemyDodge) {
-      addLog(`👻 ${battleState.enemy.name} phases through your attack ��� Miss!`, 'danger');
+      addLog(`👻 ${battleState.enemy.name} phases through your attack ���� Miss!`, 'danger');
       setBattleState(prev => ({ ...prev, turn: 'enemy', lastDmg: { value: 0, isCrit: false, target: 'enemy', id: Date.now(), dodged: true }, soundEvents: ['dodge'] }));
       return;
     }
 
-    // Check status application
+    // Check status application — respect enemy resistances
+    const enemyResists = ENEMY_RESISTANCES[battleState.enemy.id] ?? {};
     const poisonRoll = Math.random();
     const burnRoll   = Math.random();
-    const applyPoison = (player.poisonChance || 0) > 0 && poisonRoll < (player.poisonChance || 0);
-    const applyBurn   = ((player.burnChance   || 0) > 0 && burnRoll   < (player.burnChance   || 0))
-                      || (isCrit && (player.critBurn || false));
+    const canPoison  = enemyResists.poison !== 'immune';
+    const canBurn    = enemyResists.burn   !== 'immune';
+    const applyPoison = canPoison && (player.poisonChance || 0) > 0 && poisonRoll < (player.poisonChance || 0);
+    const applyBurn   = canBurn && (
+      ((player.burnChance || 0) > 0 && burnRoll < (player.burnChance || 0))
+      || (isCrit && (player.critBurn || false))
+    );
 
-    addLog(`${isCrit ? '💥 Critical! ' : ''}You deal ${finalDmg} damage to ${battleState.enemy.name}.${applyPoison ? ' 🐍 Poisoned!' : ''}${applyBurn ? ' 🔥 Burned!' : ''}`, isCrit ? 'crit' : 'player');
+    // Warn player if they tried to apply a resisted status
+    const resistedPoison = !canPoison && (player.poisonChance || 0) > 0 && poisonRoll < (player.poisonChance || 0);
+    const resistedBurn   = !canBurn   && ((player.burnChance   || 0) > 0 && burnRoll   < (player.burnChance   || 0));
+
+    addLog(
+      `${isCrit ? 'Critical! ' : ''}You deal ${finalDmg} damage to ${battleState.enemy.name}.`
+      + (applyPoison ? ' Poisoned!' : '')
+      + (applyBurn   ? ' Burned!'   : '')
+      + (resistedPoison ? ' (immune to poison)' : '')
+      + (resistedBurn   ? ' (immune to burn)'   : ''),
+      isCrit ? 'crit' : 'player'
+    );
 
     if (applyPoison) { advanceQuests('inflict_status', 'poison'); setTotalPoisons(p => p + 1); }
     if (applyBurn)   { advanceQuests('inflict_status', 'burn');   setTotalBurns(p => p + 1); }
@@ -394,7 +413,7 @@ export function useGameState() {
     setBattleState(prev => {
       const newHp = Math.max(0, prev.enemy.hp - finalDmg);
       let newEnemyStatus = [...(prev.enemyStatus || [])];
-      let soundEvents = [];
+      let soundEvents = isCrit ? ['crit'] : ['attack'];
       if (applyPoison && !newEnemyStatus.find(s => s.id === 'poison')) {
         newEnemyStatus.push({ id: 'poison', turnsLeft: STATUS_EFFECTS.poison.duration });
         soundEvents.push('poison');
@@ -403,14 +422,29 @@ export function useGameState() {
         newEnemyStatus.push({ id: 'burn', turnsLeft: STATUS_EFFECTS.burn.duration });
         soundEvents.push('burn');
       }
+
+      // Combo tracking — increment count; if threshold reached queue a bonus hit
+      const newCombo = (prev.comboCount || 0) + 1;
+      const comboReady = newCombo >= COMBO_THRESHOLD;
+      if (comboReady) {
+        soundEvents.push('combo');
+        addLog(`Combo x${newCombo}! Landing a bonus strike!`, 'crit');
+      }
+
       const next = {
         ...prev,
         enemy: { ...prev.enemy, hp: newHp },
         enemyStatus: newEnemyStatus,
         lastDmg: { value: finalDmg, isCrit, target: 'enemy', id: Date.now() },
         soundEvents,
+        comboCount: comboReady ? 0 : newCombo,
+        comboReady,
       };
-      return newHp <= 0 ? { ...next, turn: 'resolved' } : { ...next, turn: 'enemy' };
+
+      if (newHp <= 0) return { ...next, turn: 'resolved', comboCount: 0, comboReady: false };
+      // If combo is ready, go to 'player_combo' turn to fire a bonus hit before enemy
+      if (comboReady) return { ...next, turn: 'player_combo' };
+      return { ...next, turn: 'enemy' };
     });
   }, [battleState, player, addLog, advanceQuests]);
 
@@ -437,8 +471,32 @@ export function useGameState() {
     }
 
     battleFlagsRef.current.usedDefend = true;
-    addLog('🛡️ You take a defensive stance, reducing incoming damage.', 'player');
-    setBattleState(prev => ({ ...prev, turn: 'enemy_defend', defendBonus: 10, lastDmg: null, soundEvents: [] }));
+    addLog('You take a defensive stance, reducing incoming damage.', 'player');
+    setBattleState(prev => ({ ...prev, turn: 'enemy_defend', defendBonus: 10, lastDmg: null, soundEvents: [], comboCount: 0, comboReady: false }));
+  }, [battleState, player, addLog]);
+
+  // Fires automatically when comboReady is true — a single free bonus strike before enemy turn
+  const playerComboHit = useCallback(() => {
+    if (!battleState || battleState.turn !== 'player_combo') return;
+    const atk = player.atk + player.weapon.atk + (battleState.buffs?.atk || 0);
+    const defPen = (player.defPen || 0) + (battleState.buffs?.defPen || 0);
+    const enemyDef = Math.max(0, battleState.enemy.def - defPen);
+    const raw = Math.max(1, atk - enemyDef + Math.floor(Math.random() * 4));
+    const bonusDmg = Math.floor(raw * 0.6); // bonus hit deals 60% of a normal strike
+    addLog(`Combo bonus strike! ${bonusDmg} extra damage to ${battleState.enemy.name}!`, 'crit');
+    setBattleState(prev => {
+      if (!prev) return prev;
+      const newHp = Math.max(0, prev.enemy.hp - bonusDmg);
+      const next = {
+        ...prev,
+        enemy: { ...prev.enemy, hp: newHp },
+        lastDmg: { value: bonusDmg, isCrit: true, target: 'enemy', id: Date.now() },
+        soundEvents: ['comboHit'],
+        comboCount: 0,
+        comboReady: false,
+      };
+      return newHp <= 0 ? { ...next, turn: 'resolved' } : { ...next, turn: 'enemy' };
+    });
   }, [battleState, player, addLog]);
 
   const useItem = useCallback((item, inBattle = false) => {
@@ -483,7 +541,7 @@ export function useGameState() {
 
     // Battle-only effects
     if (item.effect === 'buff') {
-      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, atk: prev.buffs.atk + item.value }, turn: 'enemy', soundEvents: [] } : prev);
+      setBattleState(prev => prev ? { ...prev, buffs: { ...prev.buffs, atk: prev.buffs.atk + item.value }, turn: 'enemy', soundEvents: [], comboCount: 0, comboReady: false } : prev);
       addLog(`✨ You use ${item.name}! ATK +${item.value} for this battle.`, 'buff');
       return;
     }
@@ -616,7 +674,28 @@ export function useGameState() {
           bossPatternIdx: patIdx + 1,
           bossPhase: phase === 'phase2' ? 2 : prev.bossPhase,
           lastDmg: null,
-          soundEvents: [],
+          soundEvents: ['bossHeal'],
+        }));
+        return;
+      }
+
+      // Soul Drain — boss deals damage AND heals itself for a fixed amount
+      if (attackId === 'soul_drain') {
+        const def = player.def + player.armor.def + defBonus + (battleState.buffs?.def || 0);
+        const rawDmg = Math.max(1, Math.round(enemy.atk * attack.atkMult) - def + Math.floor(Math.random() * 6) - 2);
+        addLog(attack.log(enemy.name), 'danger');
+        addLog(`The Shadow King heals ${attack.steal} HP from your life force!`, 'danger');
+        setPlayer(p => ({ ...p, hp: Math.max(0, p.hp - rawDmg) }));
+        setBattleState(prev => ({
+          ...prev,
+          enemy: { ...prev.enemy, hp: Math.min(prev.enemy.maxHp, prev.enemy.hp + attack.steal) },
+          turn: 'player',
+          defendBonus: 0,
+          round: (prev.round || 1) + 1,
+          bossPatternIdx: patIdx + 1,
+          bossPhase: phase === 'phase2' ? 2 : prev.bossPhase,
+          lastDmg: { value: rawDmg, isCrit: false, target: 'player', id: Date.now() },
+          soundEvents: ['soulDrain'],
         }));
         return;
       }
@@ -650,6 +729,36 @@ export function useGameState() {
 
     // ── Normal enemy attack ─────────────────────────────────────────────────
     const def = player.def + player.armor.def + defBonus + (battleState.buffs?.def || 0);
+    const round = battleState.round || 1;
+
+    // Check for a special move — takes priority over regular attack
+    const specialDef = ENEMY_SPECIAL_MOVES[enemy.id];
+    if (specialDef && round % specialDef.triggerEvery === 0) {
+      const specialDmg = Math.max(1, Math.round(enemy.atk * specialDef.atkMult) - def + Math.floor(Math.random() * 4));
+      addLog(`${enemy.icon} ${specialDef.log(enemy.name)}`, 'danger');
+
+      // Phase Counter — phantom knight phases, this attack bypasses defence
+      const defDebuf = specialDef.debuff?.def ?? 0;
+      if (defDebuf < 0) {
+        addLog(`Your DEF is reduced by ${Math.abs(defDebuf)} for the next round!`, 'danger');
+      }
+
+      battleFlagsRef.current.damageTaken += specialDmg;
+      setPlayer(p => ({ ...p, hp: Math.max(0, p.hp - specialDmg) }));
+      setBattleState(prev => ({
+        ...prev,
+        turn: 'player',
+        defendBonus: 0,
+        round: round + 1,
+        buffs: { ...prev.buffs, def: (prev.buffs?.def || 0) + defDebuf },
+        lastDmg: { value: specialDmg, isCrit: true, target: 'player', id: Date.now() },
+        soundEvents: [specialDef.sfx],
+        comboCount: 0,
+        comboReady: false,
+      }));
+      return;
+    }
+
     const dmg = Math.max(1, enemy.atk - def + Math.floor(Math.random() * 6) - 2);
 
     // Check if enemy can inflict a status effect
@@ -662,7 +771,7 @@ export function useGameState() {
 
     // Handle stun — set turn to 'player_stunned' so BattleScreen auto-skips the player's turn
     if (inflictStatus === 'stun') {
-      addLog(`${enemy.icon} ${enemy.name} stuns you! 💫 Your turn is skipped!`, 'danger');
+      addLog(`${enemy.icon} ${enemy.name} stuns you! Your turn is skipped!`, 'danger');
       battleFlagsRef.current.damageTaken += dmg;
       setPlayer(p => ({
         ...p,
@@ -675,7 +784,9 @@ export function useGameState() {
         defendBonus: 0,
         round: (prev.round || 1) + 1,
         lastDmg: { value: dmg, isCrit: false, target: 'player', id: Date.now() },
-        soundEvents: [],
+        soundEvents: ['stun'],
+        comboCount: 0,
+        comboReady: false,
       }));
       return;
     }
@@ -714,6 +825,8 @@ export function useGameState() {
       round: (prev.round || 1) + 1,
       lastDmg: { value: totalDmg, isCrit: false, target: 'player', id: Date.now() },
       soundEvents: [],
+      comboCount: 0,
+      comboReady: false,
     }));
   }, [battleState, player, addLog]);
 
@@ -832,7 +945,7 @@ export function useGameState() {
   return {
     player, screen, setScreen, battleState, setBattleState, log, battleLog, notification, quests, activeSlot, difficulty,
     pendingLevelUp, pickPerk,
-    travel, startBattle, playerAttack, playerDefend, enemyAttack,
+    travel, startBattle, playerAttack, playerDefend, playerComboHit, enemyAttack,
     resolveVictory, useItem, craftItem, buyItem, rest, claimQuest, addLog, notify,
     loadSlot, eraseSlot, goToTitle, clearVictoryAndGoTitle,
     // achievement tracking
